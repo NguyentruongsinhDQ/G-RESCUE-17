@@ -1,0 +1,1233 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>G-RESCUE: Trạm Cứu Hộ Toán 12 (Teacher Update)</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Thư viện đọc file Word -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js" crossorigin="anonymous"></script>
+    <!-- Thư viện đọc/ghi file Excel -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    
+    <script crossorigin="anonymous" src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin="anonymous" src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js" crossorigin="anonymous"></script>
+
+    <script>
+        MathJax = {
+            tex: { inlineMath: [['$', '$'], ['\\(', '\\)']] },
+            svg: { fontCache: 'global' },
+            options: { enableMenu: false },
+            startup: { ready: () => MathJax.startup.defaultReady() }
+        };
+    </script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" crossorigin="anonymous"></script>
+    
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600;700;900&display=swap');
+        
+        /* Base Variables */
+        :root { --bg-primary: #f8fafc; --text-primary: #1e293b; }
+        body { font-family: 'Be Vietnam Pro', sans-serif; background-color: var(--bg-primary); color: var(--text-primary); transition: background-color 0.5s ease, color 0.3s ease; overflow-x: hidden; }
+        
+        /* Dark Mode */
+        body.dark-mode { background-color: #0f172a; color: #f1f5f9; }
+        body.dark-mode .bg-white { background-color: #1e293b !important; color: #f1f5f9; border-color: #334155; }
+        body.dark-mode .bg-slate-50 { background-color: #0f172a !important; color: #cbd5e1; border-color: #334155; }
+        body.dark-mode .text-slate-800 { color: #f8fafc !important; }
+        body.dark-mode .text-slate-700 { color: #e2e8f0 !important; }
+        body.dark-mode .text-slate-600 { color: #cbd5e1 !important; }
+        body.dark-mode .text-slate-500 { color: #94a3b8 !important; }
+        body.dark-mode .border-slate-100, body.dark-mode .border-slate-200 { border-color: #334155 !important; }
+        body.dark-mode input, body.dark-mode textarea, body.dark-mode select { background-color: #0f172a; border-color: #475569; color: white; }
+        
+        /* Seasons */
+        body.season-spring { background: linear-gradient(135deg, #fff0f5 0%, #ffe4e1 100%); }
+        body.season-spring.dark-mode { background: linear-gradient(135deg, #2e1065 0%, #4c1d95 100%); }
+        body.season-summer { background: linear-gradient(135deg, #fef9c3 0%, #fee2e2 100%); }
+        body.season-summer.dark-mode { background: linear-gradient(135deg, #450a0a 0%, #7c2d12 100%); }
+        body.season-autumn { background: linear-gradient(135deg, #ffedd5 0%, #fed7aa 100%); }
+        body.season-autumn.dark-mode { background: linear-gradient(135deg, #431407 0%, #78350f 100%); }
+        body.season-winter { background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%); }
+        body.season-winter.dark-mode { background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 100%); }
+
+        /* Effects */
+        .falling-container { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 0; overflow: hidden; }
+        .falling-item { position: absolute; top: -10%; animation: fallDown linear infinite; opacity: 0.8; }
+        @keyframes fallDown { 0% { transform: translateY(0) rotate(0deg); opacity: 1; } 100% { transform: translateY(110vh) rotate(360deg); opacity: 0; } }
+        #summer-tree { position: fixed; bottom: 0; left: -20px; width: 300px; height: 300px; z-index: 0; pointer-events: none; display: none; }
+        body.season-summer #summer-tree { display: block; }
+        body.season-summer.dark-mode #summer-tree { filter: brightness(0.4); }
+
+        /* Scrollbar & Misc */
+        ::-webkit-scrollbar { width: 8px; } ::-webkit-scrollbar-track { background: transparent; } ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; } ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        .fade-in { animation: fadeIn 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .role-card:hover { transform: translateY(-5px); box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1); }
+        .bg-genz { background: linear-gradient(135deg, #e0c3fc 0%, #8ec5fc 100%); }
+        .text-gradient { background: -webkit-linear-gradient(45deg, #6a11cb, #2575fc); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        
+        /* Print Styles */
+        @media print { 
+            body * { visibility: hidden; } 
+            #print-area, #print-area * { visibility: visible; } 
+            #print-area { position: absolute; left: 0; top: 0; width: 100%; background: white; padding: 20px; z-index: 99999; } 
+            .question-item { page-break-inside: avoid; margin-bottom: 20px; border-bottom: 1px dashed #ccc; padding-bottom: 10px; }
+            .falling-container, #summer-tree, header, .modal { display: none !important; } 
+        }
+        
+        #react-hidden-render { position: absolute; top: -9999px; left: -9999px; opacity: 0; pointer-events: none; }
+        .word-content img { max-width: 100%; height: auto; display: block; margin: 10px auto; }
+        .word-content table { border-collapse: collapse; width: 100%; margin: 10px 0; }
+        .word-content td, .word-content th { border: 1px solid #ddd; padding: 8px; }
+        .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(15, 23, 42, 0.6); backdrop-filter: blur(2px); }
+        .modal-content { background-color: #fefefe; margin: 5% auto; padding: 0; border: 1px solid #e2e8f0; width: 90%; max-width: 800px; border-radius: 16px; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25); overflow: hidden; }
+        body.dark-mode .modal-content { background-color: #1e293b; border-color: #334155; }
+        .delete-btn { opacity: 0.6; transition: opacity 0.2s; cursor: pointer; color: #ef4444; }
+        .delete-btn:hover { opacity: 1; }
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; } .custom-scrollbar::-webkit-scrollbar-track { background: transparent; } .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+        
+        /* Confetti */
+        @keyframes confetti-fall { 0% { transform: translateY(-100%) rotate(0deg); } 100% { transform: translateY(100vh) rotate(360deg); } }
+        .confetti { position: fixed; width: 10px; height: 10px; background-color: #f00; animation: confetti-fall 3s linear infinite; z-index: 9999; pointer-events: none; }
+    </style>
+</head>
+<body class="text-slate-800 font-sans min-h-screen flex flex-col relative">
+
+    <div id="falling-container" class="falling-container"></div>
+    <div id="summer-tree"><svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg"><path d="M90 200 L90 120 L80 100 L95 120 L95 200 Z" fill="#8B4513"/><rect x="90" y="120" width="15" height="80" fill="#8B4513"/><circle cx="60" cy="90" r="30" fill="#22c55e" opacity="0.9"/><circle cx="140" cy="100" r="35" fill="#22c55e" opacity="0.9"/><circle cx="100" cy="60" r="40" fill="#22c55e"/><circle cx="70" cy="80" r="5" fill="#ef4444"/><circle cx="110" cy="50" r="5" fill="#ef4444"/><circle cx="130" cy="90" r="5" fill="#ef4444"/><circle cx="90" cy="70" r="5" fill="#ef4444"/><circle cx="50" cy="100" r="5" fill="#ef4444"/></svg></div>
+
+    <header class="bg-white shadow-sm sticky top-0 z-50 border-b border-slate-200 transition-colors duration-300">
+        <div class="container mx-auto px-4 h-16 flex justify-between items-center">
+            <div class="flex items-center space-x-3 cursor-pointer group" onclick="app.goLanding()">
+                <div class="bg-gradient-to-br from-indigo-600 to-purple-600 text-white w-10 h-10 flex items-center justify-center rounded-xl shadow-lg shadow-indigo-200 group-hover:scale-105 transition-transform duration-300">
+                    <i class="fa-solid fa-life-ring fa-lg"></i>
+                </div>
+                <div>
+                    <h1 class="font-bold text-xl text-slate-800 tracking-tight leading-none group-hover:text-indigo-600 transition-colors">G-RESCUE</h1>
+                    <p class="text-[10px] text-slate-500 font-bold uppercase tracking-wider">Ultimate Gen Z</p>
+                </div>
+            </div>
+            <div class="flex items-center space-x-4">
+                <button onclick="app.toggleDarkMode()" id="dark-mode-btn" class="w-10 h-10 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-600 flex items-center justify-center transition shadow-sm border border-slate-200" title="Chế độ Dark Mode"><i class="fa-solid fa-moon"></i></button>
+                <button onclick="app.logout()" class="text-sm font-medium text-slate-500 hover:text-red-600 transition flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-slate-50"><i class="fa-solid fa-right-from-bracket"></i> <span class="hidden sm:inline">Đăng xuất</span></button>
+            </div>
+        </div>
+    </header>
+
+    <main id="app-container" class="flex-grow container mx-auto px-4 py-6 flex flex-col justify-center relative z-10"></main>
+    <div id="print-area"></div>
+
+    <div id="previewModal" class="modal fade-in">
+        <div class="modal-content relative">
+            <button onclick="document.getElementById('previewModal').style.display='none'" class="absolute top-3 right-3 w-8 h-8 flex items-center justify-center rounded-full bg-slate-100 text-slate-500 hover:bg-red-100 hover:text-red-600 transition text-lg z-10">&times;</button>
+            <div id="previewContent" class="overflow-y-auto max-h-[80vh] custom-scrollbar"></div>
+        </div>
+    </div>
+
+    <div id="export-processing" class="fixed inset-0 bg-white z-[9999] hidden flex flex-col items-center justify-center">
+        <div class="text-4xl text-blue-600 mb-4"><i class="fa-solid fa-print fa-bounce"></i></div>
+        <h2 class="text-xl font-bold text-slate-800">Đang tạo bản in PDF...</h2>
+        <p class="text-slate-500 mt-2">Vui lòng đợi trong khi hệ thống xử lý hình ảnh và công thức.</p>
+        <div class="w-64 bg-slate-200 h-2 rounded-full mt-4 overflow-hidden"><div class="bg-blue-600 h-full w-full animate-pulse"></div></div>
+    </div>
+
+    <div id="react-hidden-render"></div>
+    <canvas id="tempCanvas" style="display: none;"></canvas>
+
+    <script type="text/babel">
+        // React Component for Latex Tables (Giữ nguyên)
+        const { useState, useEffect, useRef } = React;
+        const BBTRenderer = ({ data }) => {
+            const strokeColor = "#000"; const fontMain = "16px 'Times New Roman', serif"; const fontMath = "italic 16px 'Times New Roman', serif";
+            const formatText = (text) => { if(!text) return ""; return text.replace(/\\infty/g, "∞").replace(/\\+\infty/g, "+∞").replace(/\\-\infty/g, "−∞").replace(/\\times/g, "×").replace(/\\in/g, "∈").replace(/\\notin/g, "∉").replace(/\\cup/g, "∪").replace(/\\cap/g, "∩").replace(/\\emptyset/g, "∅").replace(/\\R/g, "ℝ").replace(/\\setminus/g, "\\").replace(/-/g, "−").replace(/\{,\}/g, ",").replace(/\$/g, ""); };
+            const getStyle = (text) => { if (!text) return fontMain; const t = text.trim(); if (/^(x|y|y'|f\(x\)|f'\(x\))$/.test(t)) return fontMath; if (t.includes('infty') || t.includes('∞')) return fontMath; if (/^[-−+0-9,.;\[\]\(\)\s=<>×∈∉∪∩∅ℝ\\]+$/.test(t)) return fontMain; if (/[a-zA-ZÀ-ỹ]{2,}/.test(t) || t.includes(' ')) return fontMain; return fontMath; };
+            const { labels, xValues, signs, variations, isSignChart } = data;
+            const colWidth = 100; const headerWidth = 60; const rowHeight = 45; const yRowHeight = 100;
+            const totalHeight = isSignChart ? (rowHeight * 2) : ((rowHeight * 2) + yRowHeight);
+            const totalWidth = headerWidth + (xValues.length * colWidth) + 50; 
+            const getX = (percent) => headerWidth + (percent * (totalWidth - headerWidth - 60)) + 30;
+            const renderArrows = () => { if (!variations || variations.length === 0) return null; const sortedVars = [...variations].sort((a, b) => a.xPercent - b.xPercent); const arrows = [], texts = []; for(let i = 0; i < sortedVars.length - 1; i++) { const p1 = sortedVars[i], p2 = sortedVars[i+1]; if (p2.xPercent > p1.xPercent) { const x1 = getX(p1.xPercent), x2 = getX(p2.xPercent); const padding = 15; const yHigh = (rowHeight * 2) + padding; const yLow = totalHeight - padding; const y1 = p1.type.includes('+') ? yHigh : yLow; const y2 = p2.type.includes('+') ? yHigh : yLow; const angle = Math.atan2(y2 - y1, x2 - x1); const drawX1 = x1 + Math.cos(angle) * 12, drawY1 = y1 + Math.sin(angle) * 12; const drawX2 = x2 - Math.cos(angle) * 12, drawY2 = y2 - Math.sin(angle) * 12; arrows.push(<line key={`arr-${i}`} x1={drawX1} y1={drawY1} x2={drawX2} y2={drawY2} stroke="black" strokeWidth="1.2" markerEnd="url(#arrowhead)" />); } } sortedVars.forEach((v, i) => { const x = getX(v.xPercent); const yBase = v.type.includes('+') ? (rowHeight * 2) + 15 : totalHeight - 15; texts.push(<text key={`v-${i}`} x={x} y={yBase} dominantBaseline="middle" textAnchor="middle" style={{font: getStyle(v.value)}} fill="black">{formatText(v.value)}</text>); }); return <g>{arrows}{texts}</g>; };
+            return ( <svg width={totalWidth} height={totalHeight + 2} xmlns="http://www.w3.org/2000/svg" style={{backgroundColor: 'white'}}> <defs><marker id="arrowhead" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="black" /></marker></defs> <rect x="0" y="0" width="100%" height="100%" fill="white" /> <rect x="0.5" y="0.5" width={totalWidth-1} height={totalHeight} fill="none" stroke={strokeColor} strokeWidth="1"/> <line x1={headerWidth} y1="0" x2={headerWidth} y2={totalHeight} stroke={strokeColor} strokeWidth="1" /> <line x1="0" y1={rowHeight} x2={totalWidth} y2={rowHeight} stroke={strokeColor} strokeWidth="1" /> <line x1="0" y1={rowHeight * 2} x2={totalWidth} y2={rowHeight * 2} stroke={strokeColor} strokeWidth="1" />} <text x={headerWidth/2} y={rowHeight * 0.5} dominantBaseline="middle" textAnchor="middle" style={{font: fontMath}}>{formatText(labels[0] || "x")}</text> <text x={headerWidth/2} y={rowHeight * 1.5} dominantBaseline="middle" textAnchor="middle" style={{font: fontMath}}>{formatText(labels[1]) || "y'"}</text> {!isSignChart && <text x={headerWidth/2} y={(rowHeight * 2) + (yRowHeight / 2)} dominantBaseline="middle" textAnchor="middle" style={{font: fontMath}}>{formatText(labels[2] || "y")}</text>} {xValues.map((item, i) => <text key={`x-${i}`} x={getX(item.xPercent)} y={rowHeight * 0.5} dominantBaseline="middle" textAnchor="middle" style={{font: getStyle(item.value)}}>{formatText(item.value)}</text>)} {signs.map((item, i) => <text key={`s-${i}`} x={getX(item.xPercent)} y={rowHeight * 1.5} dominantBaseline="middle" textAnchor="middle" style={{font: fontMain}}>{formatText(item.value)}</text>)} {!isSignChart && renderArrows()} </svg> );
+        };
+        const parseTkzTab = (input) => { const initMatch = input.match(/\\tkzTabInit.*?\{(.*?)\}\s*\{(.*?)\}/s); if (!initMatch) return null; const rowsRaw = initMatch[1].split(',').map(s => s.trim().split('/')[0].replace(/\$/g, '')); const xValuesRaw = initMatch[2].split(',').map(s => s.trim().replace(/\$/g, '')); const isSignChart = rowsRaw.length === 2; const lineMatch = input.match(/\\tkzTabLine\{(.*?)\}/s); let signsRaw = []; if (lineMatch) signsRaw = lineMatch[1].split(',').map(s => s.trim()); const varMatch = input.match(/\\tkzTabVar\{(.*?)\}/s); let variationsRaw = []; if (varMatch) { const regexVar = /([+\-R])\/\s*(.*?)(?=(,|$))/g; let match; while ((match = regexVar.exec(varMatch[1])) !== null) { variationsRaw.push({ type: match[1], value: match[2].replace(/\$/g, '').trim() }); } } const xNodes = xValuesRaw.map((val, i) => ({ value: val, xPercent: i / (xValuesRaw.length - 1) })); const mappedSigns = signsRaw.map((sign, i) => { let xPercent = i / (signsRaw.length - 1); const closestNode = xNodes.find(n => Math.abs(n.xPercent - xPercent) < 0.05); if (sign === '0' || sign === 'z' || sign === 'd') { if(closestNode) xPercent = closestNode.xPercent; } return { value: sign, xPercent }; }); const mappedVariations = variationsRaw.map((v, i) => ({ ...v, xPercent: i / (variationsRaw.length - 1) })); return { type: 'tkz', labels: rowsRaw, xValues: xNodes, signs: mappedSigns, variations: mappedVariations, isSignChart }; };
+        window.renderLatexTableToImage = async (latexCode) => { return new Promise((resolve) => { const renderRoot = document.getElementById('react-hidden-render'); let parsedData = null; try { if (latexCode.includes("tkzTabInit")) parsedData = parseTkzTab(latexCode); } catch(e) { console.error(e); resolve(null); return; } if (!parsedData) { resolve(null); return; } const root = ReactDOM.createRoot(renderRoot); root.render(<BBTRenderer data={parsedData} />); setTimeout(() => { const svgElement = renderRoot.querySelector('svg'); if (svgElement) { const svgData = new XMLSerializer().serializeToString(svgElement); const canvas = document.getElementById('tempCanvas'); const ctx = canvas.getContext('2d'); const img = new Image(); const svgW = parseFloat(svgElement.getAttribute("width")) || 500; const svgH = parseFloat(svgElement.getAttribute("height")) || 300; const scale = 2; canvas.width = svgW * scale; canvas.height = svgH * scale; const encodedSvg = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(svgData); img.onload = () => { ctx.fillStyle = "white"; ctx.fillRect(0, 0, canvas.width, canvas.height); ctx.drawImage(img, 0, 0, canvas.width, canvas.height); root.unmount(); resolve(canvas.toDataURL("image/png")); }; img.src = encodedSvg; } else { root.unmount(); resolve(null); } }, 100); }); };
+    </script>
+
+    <script>
+        const INITIAL_DATA = [
+            // MCQ Example
+            {
+                "id": "Ex1_MCQ",
+                "grade": "Khối 12",
+                "chapter": "Chương I: Ứng dụng đạo hàm để khảo sát và vẽ đồ thị hàm số",
+                "lesson": "Bài 1. Tính đơn điệu và cực trị của hàm số",
+                "level": 1,
+                "type": "mcq",
+                "variant": 0,
+                "content": "Câu 1. Cho hàm số $y=f(x)$ xác định với mọi $x\\in\\mathbb{R}$ có bảng biến thiên như hình vẽ dưới đây. Hàm số đồng biến trên khoảng nào trong các khoảng sau?\n\\begin{center}\\begin{tikzpicture}\n\\tkzTabInit[lgt=1,espcl=2]{$x$/1,$y'$/1,$y$/2}{$-\\infty$,$-4$,$-2$,$+\\infty$}\n\\tkzTabLine{,-,0,+,0,-,}\n\\tkzTabVar{+/$+\\infty$,-/$-2$,+/$3$,-/$-\\infty$}\n\\end{tikzpicture}\\end{center}",
+                "options": [
+                    "$(-2;+\\infty)$",
+                    "$(-4;-2)$",
+                    "$(-\\infty;-4)$",
+                    "$(-4;+\\infty)$"
+                ],
+                "correct": 1,
+                "theory": "Cho hàm số $y=f(x)$ có đạo hàm trên khoảng $K$. Nếu $f'(x) > 0$ với mọi $x \\in K$ thì hàm số đồng biến trên khoảng $K$.\n(Nguồn: SGK Toán 12 - Kết nối tri thức, Tập 1, Trang 7)",
+                "steps": [
+                    "Quan sát bảng biến thiên, tìm khoảng mà tại đó mũi tên chỉ chiều biến thiên đi lên (hoặc $f'(x)$ mang dấu dương).",
+                    "Đối chiếu khoảng đó với các đáp án đã cho."
+                ],
+                "solution": "Dựa vào bảng biến thiên, ta thấy hàm số có mũi tên đi lên (đồng biến) trong khoảng $(-4; -2)$.\nVậy hàm số đồng biến trên khoảng $(-4; -2)$.\nChọn đáp án B."
+            },
+            // True/False Example
+            {
+                "id": "Ex2_TF",
+                "grade": "Khối 12",
+                "chapter": "Chương I: Ứng dụng đạo hàm để khảo sát và vẽ đồ thị hàm số",
+                "lesson": "Bài 1. Tính đơn điệu và cực trị của hàm số",
+                "level": 2,
+                "type": "tf",
+                "variant": 0,
+                "content": "Câu 1. Cho hàm số $y=f(x)$ xác định trên $\\mathbb{R}$ và có bảng biến thiên như hình vẽ. Xét tính đúng sai của các khẳng định sau?\n\\begin{center}\\begin{tikzpicture}\n\\tkzTabInit[lgt=1,espcl=2]{$x$/1,$y'$/1,$y$/2}{$-\\infty$,$3$,$4$,$7$,$+\\infty$}\n\\tkzTabLine{,-,0,+,0,-,0,+,}\n\\tkzTabVar{+/$+\\infty$,-/$-1$,+/$5$,-/$-2$,+/$+\\infty$}\n\\end{tikzpicture}\\end{center}",
+                "options": [
+                    "Hàm số nghịch biến trên khoảng $(3;7)$.",
+                    "Hàm số đồng biến trên khoảng $(3;4)$.",
+                    "$f(7) < f(4)$",
+                    "Phương trình $f'(6x - 3)=0$ nhận $x=1$ làm nghiệm."
+                ],
+                "correct": "1|0|0|0", // 0=Correct, 1=Incorrect (Sai, Đúng, Đúng, Đúng -> 1,0,0,0)
+                "theory": "Cho hàm số $y=f(x)$ có đạo hàm trên khoảng $K$. Nếu $f'(x)>0$ với mọi $x \\in K$ thì hàm số đồng biến trên $K$. Nếu $f'(x)<0$ với mọi $x \\in K$ thì hàm số nghịch biến trên $K$.\n(Nguồn: SGK Toán 12 - Kết nối tri thức, Tập 1, Trang 7)",
+                "steps": [
+                    "Đọc dấu của đạo hàm $f'(x)$ trên bảng biến thiên để xác định khoảng đơn điệu.",
+                    "So sánh giá trị cực trị dựa vào chiều biến thiên.",
+                    "Giải phương trình hàm hợp $f'(u)=0$ bằng cách đối chiếu với các điểm cực trị của $f(x)$."
+                ],
+                "solution": "a) Sai. Trên khoảng $(3;7)$, đạo hàm đổi dấu từ dương sang âm tại $x=4$. Cụ thể, hàm số đồng biến trên $(3;4)$ và nghịch biến trên $(4;7)$.\nb) Đúng. Trên khoảng $(3;4)$, ta thấy $f'(x)$ mang dấu $(+)$ nên hàm số đồng biến.\nc) Đúng. Dựa vào bảng biến thiên, $x=4$ là điểm cực đại, sau đó hàm số nghịch biến trên $(4;7)$, tức là đồ thị đi xuống từ $f(4)$ về $f(7)$. Do đó $f(4) > f(7)$.\nd) Đúng. Dựa vào bảng biến thiên, $f'(x)=0 \\Leftrightarrow x \\in \\{3; 4; 7\\}$.\nXét phương trình $f'(6x - 3)=0$, ta có:\n$\\left[ \\begin{aligned} & 6x - 3 = 3 \\\\ & 6x - 3 = 4 \\\\ & 6x - 3 = 7 \\end{aligned} \\right. \\Leftrightarrow \\left[ \\begin{aligned} & 6x = 6 \\\\ & 6x = 7 \\\\ & 6x = 10 \\end{aligned} \\right. \\Leftrightarrow \\left[ \\begin{aligned} & x = 1 \\\\ & x = \\frac{7}{6} \\\\ & x = \\frac{5}{3} \\end{aligned} \\right.$\nVậy $x=1$ là một nghiệm của phương trình."
+            },
+            // Short Answer Example
+            {
+                "id": "Ex3_Short",
+                "grade": "Khối 12",
+                "chapter": "Chương I: Ứng dụng đạo hàm để khảo sát và vẽ đồ thị hàm số",
+                "lesson": "Bài 1. Tính đơn điệu và cực trị của hàm số",
+                "level": 2,
+                "type": "short",
+                "variant": 0,
+                "content": "Cho biểu thức $P = -2x_1 + x_2$, biết $x_1, x_2$ lần lượt là điểm cực tiểu và điểm cực đại của hàm số $y = -2x^3 - 9x^2$. Giá trị của $P$ bằng bao nhiêu?",
+                "options": [],
+                "correct": "6",
+                "theory": "Quy tắc tìm cực trị của hàm số:\n1. Tìm tập xác định.\n2. Tính $f'(x)$. Tìm các điểm tại đó $f'(x)=0$ hoặc không tồn tại.\n3. Lập bảng biến thiên.\n4. Từ bảng biến thiên suy ra các điểm cực trị.\n(Nguồn: SGK Toán 12 - Kết nối tri thức, Tập 1, Trang 11)",
+                "steps": [
+                    "Tính đạo hàm $f'(x)$.",
+                    "Tìm nghiệm của $f'(x)=0$.",
+                    "Xác định điểm cực đại, cực tiểu dựa vào dấu của đạo hàm.",
+                    "Thay giá trị $x_1, x_2$ vào biểu thức $P$."
+                ],
+                "solution": "Ta có $f'(x)=-6x^{2}-18x$.\nGiải phương trình $f'(x)=0 \\Leftrightarrow -6x(x+3)=0 \\Leftrightarrow \\left[\\begin{array}{l}x=0\\\\x=-3\\end{array}\\right.$.\nHệ số $a=-6 < 0$, đạo hàm là tam thức bậc hai nên dấu của $f'(x)$ như sau:\n+ $f'(x) > 0$ khi $x \\in (-3; 0)$.\n+ $f'(x) < 0$ khi $x \\in (-\\infty; -3) \\cup (0; +\\infty)$.\nDo đó:\n+ Hàm số đạt cực tiểu tại $x_1 = -3$ (đạo hàm đổi dấu từ âm sang dương).\n+ Hàm số đạt cực đại tại $x_2 = 0$ (đạo hàm đổi dấu từ dương sang âm).\nThay vào biểu thức $P$:\n$P = -2(-3) + 0 = 6$.\nĐáp số: 6."
+            }
+        ];
+        
+        const INITIAL_TREE = { "Khối 10": {}, "Khối 11": {}, "Khối 12": { "Chương I: Ứng dụng đạo hàm để khảo sát và vẽ đồ thị hàm số": [ "Bài 1. Tính đơn điệu và cực trị của hàm số", "Bài 2. Giá trị lớn nhất và giá trị nhỏ nhất của hàm số", "Bài 3. Đường tiệm cận của đồ thị hàm số", "Bài 4. Khảo sát sự biến thiên và vẽ đồ thị hàm số", "Bài 5. Ứng dụng đạo hàm để giải quyết một số vấn đề liên quan đến thực tiễn" ], "Chương II: Véctơ và hệ trục toạ độ trong không gian": [], "Chương III: Các số đặc trưng đo mức độ phân tán của mẫu số liệu ghép nhóm": [], "Chương IV: Nguyên hàm và tích phân": [], "Chương V: Phương pháp toạ độ trong không gian": [], "Chương VI: Xác suất có điều kiện": [] } };
+        
+        // Admin credit mặc định vô cùng - Version bumped to force reload
+        const INITIAL_USERS = [
+            { u: "admin", p: "123", role: "admin", credit: 999999, status: "active", class: "System", lastLogin: "" },
+            { u: "giaovien", p: "123", role: "teacher", credit: 2000, status: "active", class: "GV Toán", lastLogin: "" },
+            { u: "hs1", p: "123", role: "student", credit: 10, status: "active", manager: "giaovien", class: "12A1", lastLogin: "" },
+            { u: "hs2", p: "123", role: "student", credit: 50, status: "active", manager: "giaovien", class: "12A2", lastLogin: "" },
+            { u: "hocsinh", p: "123", role: "student", credit: 100, status: "active", manager: "giaovien", class: "12A1", lastLogin: "" } // Added friendly username
+        ];
+
+        const DATA_VERSION = 6; 
+
+        const app = {
+            data: [], tree: {}, users: [], currentUser: null,
+            phase: 0, quiz: [], answers: {}, reviewQueue: [], reviewIndex: 0,
+            rescueStep: 0, // 0:Content, 1:Theory, 2:Steps, 3:Solution, 4:Variants
+            pendingVariantId: null, isDarkMode: false, season: 'spring',
+            adminMode: 'manual', adminTab: 'question', 
+            sel: { g: '', c: '', l: '' }, structSel: { g: '' }, searchTerm: '',
+            adminFilter: { grade: '', chapter: '', lesson: '' },
+            wordDrafts: [], doneVariants: [],
+            phase3Quiz: [], answersPhase3: {},
+
+            init() {
+                const localVer = parseInt(localStorage.getItem('g_rescue_version') || '0');
+                const fileVer = (typeof DATA_VERSION !== 'undefined') ? DATA_VERSION : 0;
+
+                if (fileVer > localVer) {
+                    this.data = INITIAL_DATA;
+                    this.tree = INITIAL_TREE;
+                    this.users = JSON.parse(JSON.stringify(INITIAL_USERS));
+                    localStorage.setItem('g_rescue_v6', JSON.stringify(this.data));
+                    localStorage.setItem('g_rescue_tree_v1', JSON.stringify(this.tree));
+                    localStorage.setItem('g_rescue_users_v1', JSON.stringify(this.users));
+                    localStorage.setItem('g_rescue_version', fileVer);
+                } else {
+                    const storedData = localStorage.getItem('g_rescue_v6');
+                    this.data = storedData ? JSON.parse(storedData) : INITIAL_DATA;
+                    const storedTree = localStorage.getItem('g_rescue_tree_v1');
+                    this.tree = storedTree ? JSON.parse(storedTree) : INITIAL_TREE;
+                    const storedUsers = localStorage.getItem('g_rescue_users_v1');
+                    this.users = storedUsers ? JSON.parse(storedUsers) : JSON.parse(JSON.stringify(INITIAL_USERS));
+                }
+                
+                // Ensure admin credit is effectively infinite
+                const admin = this.users.find(u => u.role === 'admin');
+                if(admin) admin.credit = 999999;
+
+                this.data.forEach(q => { if (typeof q.variant === 'undefined') { q.variant = q.isVariant ? 1 : 0; delete q.isVariant; } });
+                
+                this.detectSeason();
+                this.loadDarkMode();
+                this.renderSeasonalEffects();
+                this.goLanding();
+            },
+
+            // --- USER & CREDIT LOGIC ---
+            saveUsers() { localStorage.setItem('g_rescue_users_v1', JSON.stringify(this.users)); },
+            checkDailyCredit(user) {
+                const today = new Date().toDateString();
+                if (user.lastLogin !== today) {
+                    let bonus = 0;
+                    if (user.role === 'teacher') bonus = 100;
+                    if (user.role === 'student') bonus = 2; 
+                    if (bonus > 0) {
+                        user.credit += bonus;
+                        alert(`📅 ĐIỂM DANH: Xin chào ${user.u}!\nBạn được cộng +${bonus} Credit hôm nay.`);
+                    }
+                    user.lastLogin = today;
+                    this.saveUsers();
+                }
+            },
+            deductCredit(amount, actionName) {
+                if (!this.currentUser) return false;
+                if (this.currentUser.role === 'admin') return true; 
+                
+                if (this.currentUser.credit >= amount) {
+                    this.currentUser.credit -= amount;
+                    this.saveUsers();
+                    this.updateHeaderCredit();
+                    return true;
+                } else {
+                    alert(`⛔ KHÔNG ĐỦ TÍN DỤNG!\nThao tác "${actionName}" tốn ${amount} CR.\nVí của bạn: ${this.currentUser.credit} CR.`);
+                    return false;
+                }
+            },
+            updateHeaderCredit() {
+                const el = document.getElementById('header-credit');
+                if (el && this.currentUser) el.innerText = `${this.currentUser.credit}`;
+            },
+
+            // --- UI LOGIC ---
+            detectSeason() {
+                const month = new Date().getMonth() + 1;
+                this.season = (month >= 1 && month <= 3) ? 'spring' : (month >= 4 && month <= 6) ? 'summer' : (month >= 7 && month <= 9) ? 'autumn' : 'winter';
+                document.body.className = `text-slate-800 font-sans min-h-screen flex flex-col relative season-${this.season} ${this.isDarkMode?'dark-mode':''}`;
+            },
+            toggleDarkMode() { 
+                this.isDarkMode = !this.isDarkMode; 
+                localStorage.setItem('g_rescue_dark_mode', this.isDarkMode);
+                this.detectSeason(); 
+            },
+            loadDarkMode() { if(localStorage.getItem('g_rescue_dark_mode')==='true') this.toggleDarkMode(); },
+            renderSeasonalEffects() {
+                const container = document.getElementById('falling-container');
+                let icon = ''; let count = 15; let colors = [];
+                if (this.season === 'spring') { icon = '🌸'; colors = ['#fbcfe8', '#f472b6']; count = 20; }
+                else if (this.season === 'summer') { icon = '🌺'; colors = ['#fecaca', '#ef4444']; count = 15; }
+                else if (this.season === 'autumn') { icon = '🍁'; colors = ['#fdba74', '#ea580c']; count = 15; }
+                else { icon = '❄️'; colors = ['#bae6fd', '#fff']; count = 30; }
+                let html = '';
+                for (let i = 0; i < count; i++) {
+                    const left = Math.random() * 100; const delay = Math.random() * 5; const duration = 5 + Math.random() * 5; const size = 10 + Math.random() * 15;
+                    const color = colors[Math.floor(Math.random() * colors.length)];
+                    const styleColor = this.season === 'winter' ? '' : `color: ${color};`;
+                    html += `<div class="falling-item" style="left: ${left}%; animation-delay: ${delay}s; animation-duration: ${duration}s; font-size: ${size}px; ${styleColor}">${icon}</div>`;
+                }
+                container.innerHTML = html;
+            },
+
+            // --- AUTH LOGIC ---
+            login(roleInput) { 
+                let theme = 'blue'; let title = 'Học sinh';
+                if (roleInput === 'teacher') { theme = 'amber'; title = 'Giáo viên'; }
+                if (roleInput === 'admin') { theme = 'red'; title = 'Quản trị viên'; }
+                document.getElementById('app-container').innerHTML = `
+                    <div class="max-w-md mx-auto fade-in mt-10">
+                        <div class="bg-white p-8 rounded-2xl shadow-xl border border-slate-100">
+                            <h2 class="text-2xl font-bold text-center text-slate-800 mb-6">Đăng nhập ${title}</h2>
+                            <div class="space-y-4">
+                                <input type="text" id="u" class="w-full border p-3 rounded-lg focus:ring-2 focus:ring-${theme}-500 outline-none" placeholder="Tên đăng nhập" onkeypress="if(event.key==='Enter') document.getElementById('p').focus()">
+                                <input type="password" id="p" class="w-full border p-3 rounded-lg focus:ring-2 focus:ring-${theme}-500 outline-none" placeholder="Mật khẩu" onkeypress="if(event.key==='Enter') app.auth('${roleInput}')">
+                                <button onclick="app.auth('${roleInput}')" class="w-full bg-${theme}-600 text-white py-3 rounded-lg font-bold hover:bg-${theme}-700 transition">Vào hệ thống</button>
+                                <button onclick="app.goLanding()" class="w-full text-slate-500 text-sm mt-2 hover:underline">Quay lại</button>
+                            </div>
+                            <p class="text-xs text-center text-slate-400 mt-4">Quên mật khẩu? Liên hệ Admin: <a href="tel:0969205204" class="text-blue-500 hover:underline font-bold">0969.205.204</a></p>
+                        </div>
+                    </div>`;
+            },
+            auth(roleInput) {
+                const u = document.getElementById('u').value.trim();
+                const p = document.getElementById('p').value.trim();
+                const user = this.users.find(x => x.u.toLowerCase() === u.toLowerCase() && x.p === p);
+                if (user) {
+                    if (user.status === 'locked') return alert("Tài khoản này đã bị khóa!");
+                    if (roleInput === 'student' && user.role !== 'student') return alert("Tài khoản này không phải Học sinh!");
+                    if (roleInput === 'teacher' && user.role !== 'teacher') return alert("Tài khoản này không phải Giáo viên!");
+                    if (roleInput === 'admin' && user.role !== 'admin') return alert("Bạn không phải Admin!");
+                    this.currentUser = user;
+                    this.checkDailyCredit(user);
+                    if (user.role === 'admin' || user.role === 'teacher') this.renderAdmin();
+                    else this.renderStudent();
+                } else alert("Sai tên đăng nhập hoặc mật khẩu! (Thử: admin/123, giaovien/123, hs1/123, hocsinh/123)");
+            },
+            logout() { this.currentUser = null; this.goLanding(); },
+
+            // --- STUDENT VIEW ---
+            renderStudent() {
+                const creditDisplay = `<div class="mb-4 bg-indigo-50 px-4 py-3 rounded-xl text-indigo-700 font-bold shadow-sm border border-indigo-100 flex items-center justify-between"><div class="flex items-center gap-2"><i class="fa-solid fa-wallet text-xl"></i> <span class="text-xs uppercase tracking-wider">Tín dụng</span></div><span id="header-credit" class="text-2xl">${this.currentUser.credit}</span></div>`;
+                const isTeacher = this.currentUser && this.currentUser.role === 'teacher';
+                const backBtn = isTeacher ? `<button onclick="app.switchToTeacherView()" class="fixed bottom-4 left-4 bg-amber-600 text-white px-4 py-2 rounded-full shadow-lg font-bold hover:bg-amber-700 z-50 animate-pulse"><i class="fa-solid fa-arrow-left"></i> Về Sảnh Giáo Viên</button>` : '';
+
+                document.getElementById('app-container').innerHTML = `
+                    ${backBtn}
+                    <div class="grid grid-cols-12 gap-6 w-full max-w-7xl mx-auto fade-in relative">
+                        <div class="col-span-3 bg-white p-4 rounded-xl shadow h-fit border border-slate-100">
+                            ${creditDisplay}
+                            <h3 class="font-bold text-slate-500 mb-4 border-b pb-2">CHƯƠNG TRÌNH HỌC</h3>
+                            ${this.renderStudentTree()}
+                        </div>
+                        <div id="student-main" class="col-span-9 bg-white p-8 rounded-xl shadow border border-slate-100 min-h-[500px] flex items-center justify-center text-center">
+                            <div class="text-center max-w-lg mx-auto">
+                                <img src="https://cdn-icons-png.flaticon.com/512/3750/3750019.png" class="w-32 mx-auto mb-6 opacity-90 hover:scale-110 transition duration-500">
+                                <h2 class="text-3xl font-bold text-slate-800 mb-2">Sẵn sàng 'Out Trình' chưa? 😎</h2>
+                                <p class="text-slate-500">Chọn bài học bên trái để bắt đầu ngay.</p>
+                            </div>
+                        </div>
+                    </div>`;
+            },
+            switchToTeacherView() { this.renderAdmin(); },
+            renderStudentTree() {
+                let html = '';
+                for(const g in this.tree) {
+                    html += `<details open class="group mb-2"><summary class="font-bold text-slate-700 p-2 hover:bg-slate-50 rounded cursor-pointer">${g}</summary><div class="pl-4 border-l ml-2">`;
+                    for(const c in this.tree[g]) {
+                        html += `<details open class="mt-1"><summary class="text-sm font-semibold text-slate-600 p-1 hover:text-blue-600 cursor-pointer">${c}</summary><div class="pl-3 mt-1 space-y-1">`;
+                        this.tree[g][c].forEach(l => html += `<div onclick="app.startFlow('${g}','${c}','${l}')" class="text-xs text-slate-500 p-2 rounded hover:bg-blue-50 hover:text-blue-700 cursor-pointer flex items-center"><i class="fa-solid fa-circle-play mr-2 text-[8px]"></i> ${l}</div>`);
+                        html += `</div></details>`;
+                    }
+                    html += `</div></details>`;
+                }
+                return html;
+            },
+
+            // --- GAME FLOW (Phase 1, 2, 3) ---
+            startFlow(g,c,l) {
+                if (!this.deductCredit(1, "Làm bài tập")) return;
+
+                this.answers = {}; this.reviewQueue = []; this.reviewIndex = 0; this.phase = 1; this.doneVariants = [];
+                const main = document.getElementById('student-main');
+                main.innerHTML = `<div class="flex flex-col items-center justify-center h-full min-h-[400px] fade-in"><i class="fa-solid fa-circle-notch fa-spin text-4xl text-blue-500 mb-4"></i><p class="text-slate-600 font-medium">Đang tải bộ đề...</p><p class="text-sm text-slate-400 mt-1">${l}</p></div>`;
+
+                setTimeout(() => {
+                    let pool = this.data.filter(q => q.grade===g && q.chapter===c && q.lesson===l && q.variant === 0);
+                    if(pool.length === 0) pool = this.data.filter(q => q.grade===g && q.chapter===c && q.lesson===l);
+                    
+                    if(pool.length === 0) {
+                        main.innerHTML = `<div class="flex flex-col items-center justify-center h-full min-h-[400px] text-center fade-in"><div class="w-20 h-20 bg-slate-100 rounded-full flex items-center justify-center mb-4"><i class="fa-solid fa-clipboard-question text-3xl text-slate-400"></i></div><h3 class="text-xl font-bold text-slate-700">Chưa có dữ liệu</h3><p class="text-slate-500 mt-2">Bài học này chưa có câu hỏi.</p></div>`;
+                        return;
+                    }
+                    
+                    let qLv1 = pool.filter(q => q.level === 1).sort(() => 0.5 - Math.random()).slice(0, 4);
+                    let qLv2 = pool.filter(q => q.level === 2).sort(() => 0.5 - Math.random()).slice(0, 4);
+                    let qLv3 = pool.filter(q => q.level === 3).sort(() => 0.5 - Math.random()).slice(0, 2);
+                    
+                    if(qLv1.length < 4) qLv1 = [...qLv1, ...pool.filter(q => q.level === 1 && !qLv1.includes(q))].slice(0, 4);
+                    let finalQuiz = [...qLv1, ...qLv2, ...qLv3];
+                    if (finalQuiz.length < 10) {
+                        const remaining = pool.filter(q => !finalQuiz.includes(q)).sort(() => 0.5 - Math.random());
+                        finalQuiz = [...finalQuiz, ...remaining].slice(0, 10);
+                    }
+
+                    this.quiz = finalQuiz.sort(() => 0.5 - Math.random());
+                    this.renderPhase1();
+                }, 300);
+            },
+
+            async renderPhase1() {
+                const main = document.getElementById('student-main');
+                main.className = "col-span-9 bg-white p-8 rounded-xl shadow border-t-4 border-red-500";
+                let html = `<div class="w-full"><div class="flex justify-between items-center mb-6"><h2 class="text-xl font-bold text-red-600">🔴 GIAI ĐOẠN 1: TIẾP NHẬN</h2><div class="flex gap-2"><span class="bg-red-100 text-red-600 px-3 py-1 rounded text-xs font-bold">${this.quiz.length} Câu</span><button onclick="app.renderStudent()" class="text-slate-400 hover:text-red-500 text-sm px-2">Thoát</button></div></div>`;
+                for (let i=0; i<this.quiz.length; i++) {
+                    const q = this.quiz[i];
+                    const contentHtml = await this.renderContent(q.content);
+                    html += `<div class="mb-6 p-4 border border-slate-100 rounded-lg"><div class="font-bold text-slate-700 mb-2">Câu ${i+1}:</div><div class="mb-3 text-slate-800">${contentHtml}</div>`;
+                    if (q.type === 'mcq') html += `<div class="grid grid-cols-2 gap-3">` + q.options.map((o, idx) => `<label class="flex items-center p-3 border rounded cursor-pointer hover:bg-slate-50"><input type="radio" name="q${q.id}" value="${idx}" class="mr-3" onchange="app.answers[${q.id}]='${idx}'"> ${o}</label>`).join('') + `</div>`;
+                    else if (q.type === 'tf') html += `<div class="grid grid-cols-1 gap-2">` + q.options.map((o, idx) => `<div class="flex items-center justify-between p-2 border rounded bg-slate-50"><span class="text-sm flex-1 mr-4">${o}</span><div class="flex gap-2"><label class="flex items-center text-xs"><input type="radio" name="q${q.id}_${idx}" value="0" onchange="app.setTFAnswer('${q.id}', ${idx}, '0')"> Đ</label><label class="flex items-center text-xs"><input type="radio" name="q${q.id}_${idx}" value="1" onchange="app.setTFAnswer('${q.id}', ${idx}, '1')"> S</label></div></div>`).join('') + `</div>`;
+                    else html += `<div class="flex gap-2 justify-start"><input type="text" maxlength="1" class="w-10 h-10 border-2 border-slate-300 rounded text-center text-lg font-bold focus:border-blue-500 focus:outline-none uppercase" onkeyup="app.setShortAnswer('${q.id}', 0, this)"><input type="text" maxlength="1" class="w-10 h-10 border-2 border-slate-300 rounded text-center text-lg font-bold focus:border-blue-500 focus:outline-none uppercase" onkeyup="app.setShortAnswer('${q.id}', 1, this)"><input type="text" maxlength="1" class="w-10 h-10 border-2 border-slate-300 rounded text-center text-lg font-bold focus:border-blue-500 focus:outline-none uppercase" onkeyup="app.setShortAnswer('${q.id}', 2, this)"><input type="text" maxlength="1" class="w-10 h-10 border-2 border-slate-300 rounded text-center text-lg font-bold focus:border-blue-500 focus:outline-none uppercase" onkeyup="app.setShortAnswer('${q.id}', 3, this)"></div>`;
+                    html += `</div>`;
+                }
+                html += `<button onclick="app.submitPhase1()" class="w-full bg-red-600 text-white py-3 rounded-lg font-bold hover:bg-red-700 shadow-lg mt-4">NỘP BÀI</button></div>`;
+                main.innerHTML = html; MathJax.typeset();
+            },
+            setTFAnswer(qId, idx, val) { if(!this.answers[qId]) this.answers[qId]={}; this.answers[qId][idx]=val; },
+            setShortAnswer(qId, idx, input) { if(!this.answers[qId]) this.answers[qId] = ['', '', '', '']; this.answers[qId][idx] = input.value.toUpperCase(); if(input.value && idx < 3) { input.nextElementSibling.focus(); } },
+            
+            submitPhase1() {
+                let score = 0; this.reviewQueue = [];
+                this.quiz.forEach(q => {
+                    let isCorrect = false;
+                    if(q.type === 'mcq') { if(this.answers[q.id] == q.correct) isCorrect = true; }
+                    else if(q.type === 'tf') { const u = this.answers[q.id]||{}; const c = q.correct.split('|'); let all=true; if(Object.keys(u).length===0) all=false; else c.forEach((v,k)=>{if(u[k]!=v)all=false}); isCorrect=all; }
+                    else { const u = (this.answers[q.id]||[]).join('').trim(); const c = (q.correct||"NO_DATA").toString().trim().toUpperCase(); if(u===c || parseFloat(u.replace(',','.'))===parseFloat(c.replace(',','.'))) isCorrect=true; }
+                    if(isCorrect) score++; else this.reviewQueue.push(q);
+                });
+                const main = document.getElementById('student-main');
+                main.innerHTML = `<div class="text-center py-10 w-full fade-in"><h2 class="text-3xl font-bold text-slate-800">Điểm số: <span class="text-red-600">${score}/${this.quiz.length}</span></h2><p class="mt-4 text-slate-600">${score===this.quiz.length?'Xuất sắc!':'Bạn cần ôn tập lại ' + this.reviewQueue.length + ' câu sai.'}</p><button onclick="app.startPhase2()" class="mt-6 bg-amber-500 text-white px-8 py-3 rounded-full font-bold shadow-lg">🚀 Vào Trạm Cứu Hộ</button></div>`;
+            },
+            startPhase2() { if(this.reviewQueue.length===0) return this.finishSession(true); this.reviewIndex=0; this.rescueStep = 0; this.renderRescueItem(); },
+            
+            async renderRescueItem() {
+                const q = this.reviewQueue[this.reviewIndex];
+                const main = document.getElementById('student-main'); main.className = "col-span-9 bg-white p-0 rounded-xl shadow border-t-4 border-amber-500 overflow-hidden";
+                const qContentHtml = await this.renderContent(q.content);
+                
+                // Cumulative Content Logic
+                let contentHTML = `<div class="mb-6"><h3 class="text-lg font-bold text-slate-800 mb-2">2.1 NỘI DUNG CÂU HỎI</h3><div class="text-lg text-slate-800">${qContentHtml}</div></div>`;
+                
+                if (this.rescueStep >= 1) {
+                    contentHTML += `<div class="mb-6 animate-fade-in"><h3 class="text-lg font-bold text-blue-700 mb-2">2.2 CƠ SỞ LÝ THUYẾT</h3><div class="bg-blue-50 p-4 rounded border border-blue-100 whitespace-pre-wrap">${q.theory || 'Đang cập nhật...'}</div></div>`;
+                }
+                if (this.rescueStep >= 2) {
+                    contentHTML += `<div class="mb-6 animate-fade-in"><h3 class="text-lg font-bold text-yellow-700 mb-2">2.3 HƯỚNG DẪN GIẢI</h3><div class="bg-yellow-50 p-4 rounded border border-yellow-100"><ul class="list-disc pl-5">${(q.steps||[]).map(s=>`<li>${s}</li>`).join('')}</ul></div></div>`;
+                }
+                if (this.rescueStep >= 3) {
+                    contentHTML += `<div class="mb-6 animate-fade-in"><h3 class="text-lg font-bold text-indigo-700 mb-2">2.4 LỜI GIẢI CHI TIẾT</h3><div class="bg-indigo-50 p-4 rounded border border-indigo-100 whitespace-pre-wrap text-indigo-900">${q.solution}</div></div>`;
+                }
+                
+                let actionArea = '';
+                if (this.rescueStep === 4) {
+                    contentHTML += `<div class="mb-6 animate-fade-in"><h3 class="text-lg font-bold text-purple-700 mb-2">2.5 LUYỆN TẬP BIẾN THỂ</h3><div id="rescue-variant-area">Đang tải biến thể...</div></div>`;
+                    
+                    let baseId = q.id; if(q.id.toString().includes('_V')) baseId = q.id.split('_V')[0];
+                    const allVariants = this.data.filter(i => i.id.toString().startsWith(baseId+'_V') && i.id !== q.id).sort((a,b)=>parseInt(a.id.split('_V')[1])-parseInt(b.id.split('_V')[1]));
+                    
+                    setTimeout(() => {
+                         const vArea = document.getElementById('rescue-variant-area');
+                         if(!vArea) return;
+                         if (allVariants.length === 0) vArea.innerHTML = `<div class="text-center italic text-slate-500">Không có biến thể nào.</div>`;
+                         else {
+                            let activeV = allVariants.find(v => !this.doneVariants.includes(v.id)) || allVariants[0];
+                            q.lockedVariantId = activeV.id;
+                            this.renderContent(activeV.content).then(vHtml => {
+                                let optHtml = '';
+                                if(activeV.type==='mcq') optHtml = `<div class="grid grid-cols-2 gap-3 mb-4">${activeV.options.map((o,i)=>`<button onclick="app.checkVariantResult('${activeV.id}',${i})" class="p-3 border rounded-lg bg-slate-50 text-left hover:bg-slate-100" id="v-opt-${i}">${String.fromCharCode(65+i)}. ${o}</button>`).join('')}</div>`;
+                                else if(activeV.type==='tf') optHtml = `<div class="grid grid-cols-1 gap-2 mb-4">${activeV.options.map((o, idx) => `<div class="flex items-center justify-between p-2 border rounded bg-slate-50"><span class="text-sm flex-1 mr-4">${o}</span><div class="flex gap-2"><button onclick="app.checkVariantResult('${activeV.id}', '${idx}-0')" class="px-2 border rounded" id="v-opt-${idx}-0">Đ</button><button onclick="app.checkVariantResult('${activeV.id}', '${idx}-1')" class="px-2 border rounded" id="v-opt-${idx}-1">S</button></div></div>`).join('')}</div>`;
+                                else optHtml = `<div class="mb-4 flex gap-2"><input type="text" class="v-short-${activeV.id} border p-2 rounded w-full" placeholder="Nhập đáp án"><button onclick="app.checkVariantResult('${activeV.id}', 'short')" class="bg-purple-600 text-white px-4 rounded">Check</button></div>`;
+                                
+                                vArea.innerHTML = `<div class="mb-4"><span class="bg-purple-100 text-purple-700 px-2 py-1 rounded text-xs font-bold">Biến thể #${activeV.id.split('_V')[1]}</span></div><div>${vHtml}</div>${optHtml}<div id="variant-feedback-${activeV.id}" class="hidden mt-4 p-4 rounded-xl border bg-slate-50"></div>`;
+                                MathJax.typeset();
+                            });
+                         }
+                    }, 100);
+                    
+                    const btnText = (this.reviewIndex < this.reviewQueue.length - 1) ? 'Câu tiếp theo' : 'Hoàn thành Cứu hộ';
+                    actionArea = `<button onclick="app.nextRescueQuestion()" class="bg-slate-800 text-white px-6 py-2 rounded shadow hover:bg-slate-700">${btnText}</button>`;
+                } else {
+                    actionArea = `<button onclick="app.nextRescueStep()" class="bg-blue-600 text-white px-6 py-2 rounded shadow hover:bg-blue-700">Tiếp tục <i class="fa-solid fa-arrow-down ml-1"></i></button>`;
+                }
+
+                main.innerHTML = `<div class="flex flex-col h-[600px]"><div class="bg-amber-50 p-4 border-b border-amber-100 flex justify-between items-center"><h2 class="font-bold text-amber-700">🟡 CỨU HỘ: CÂU ${this.reviewIndex + 1}/${this.reviewQueue.length}</h2></div><div class="flex-grow p-6 overflow-y-auto custom-scrollbar" id="rescue-scroll-area">${contentHTML}</div><div class="p-4 border-t bg-slate-50 flex justify-between"><button onclick="app.renderStudent()" class="text-slate-400">Thoát</button>${actionArea}</div></div>`;
+                MathJax.typeset();
+                
+                // Auto scroll to bottom
+                setTimeout(() => {
+                    const scrollArea = document.getElementById('rescue-scroll-area');
+                    if(scrollArea) scrollArea.scrollTop = scrollArea.scrollHeight;
+                }, 100);
+            },
+            nextRescueStep() {
+                if (this.rescueStep < 4) {
+                    this.rescueStep++;
+                    this.renderRescueItem();
+                } else {
+                    this.nextRescueQuestion();
+                }
+            },
+            nextRescueQuestion() {
+                this.reviewIndex++;
+                this.rescueStep = 0;
+                if(this.reviewIndex < this.reviewQueue.length) this.renderRescueItem(); 
+                else this.startPhase3();
+            },
+            
+            checkVariantResult(vId, userChoice) {
+                const variant = this.data.find(v => v.id == vId);
+                const feedbackEl = document.getElementById(`variant-feedback-${vId}`);
+                let isCorrect = false;
+
+                if (variant.type === 'mcq') {
+                    variant.options.forEach((_, i) => { const btn = document.getElementById(`v-opt-${i}`); if(btn) { btn.disabled=true; if(i==variant.correct) btn.classList.add('bg-green-100','border-green-500'); else if(i==userChoice) btn.classList.add('bg-red-100','border-red-500'); } });
+                    isCorrect = (userChoice === variant.correct);
+                } else if (variant.type === 'tf') {
+                     const [idx, val] = userChoice.split('-');
+                     const corrects = variant.correct.split('|');
+                     const btn = document.getElementById(`v-opt-${idx}-${val}`); if(btn) btn.classList.add(corrects[idx]===val?'bg-green-100':'bg-red-100');
+                     return; 
+                } else {
+                    const input = document.querySelector(`.v-short-${vId}`);
+                    const val = input.value.trim().toUpperCase(); const c = variant.correct.toString().trim().toUpperCase();
+                    isCorrect = (val===c || parseFloat(val.replace(',','.'))===parseFloat(c.replace(',','.')));
+                }
+                
+                if (isCorrect) {
+                    feedbackEl.className = "mt-4 p-4 rounded-xl bg-green-50 border-green-200 text-green-800 block";
+                    feedbackEl.innerHTML = `<div>✅ Chính xác! ${variant.solution || ''}</div>`;
+                    if(!this.doneVariants.includes(vId)) this.doneVariants.push(vId);
+                } else {
+                    feedbackEl.className = "mt-4 p-4 rounded-xl bg-red-50 border-red-200 text-red-800 block";
+                    feedbackEl.innerHTML = `<div>❌ Sai rồi. ${variant.solution || ''}</div>`;
+                }
+            },
+
+            // --- VIEW QUESTION DETAIL (ADMIN) ---
+            async renderContent(content) {
+                if (content.includes("tikzpicture") || content.includes("tabular")) {
+                    const imgUrl = await window.renderLatexTableToImage(content);
+                    if (imgUrl) return content.replace(/\\begin\{center\}.*?\\end\{center\}/s, `<img src="${imgUrl}" class="mx-auto my-2 border rounded"/>`).replace(/\\begin\{tikzpicture\}.*?\\end\{tikzpicture\}/s, `<img src="${imgUrl}" class="mx-auto my-2 border rounded"/>`);
+                }
+                return content;
+            },
+
+            viewQuestionDetail(id) {
+                const q = this.data.find(item => item.id == id); if (!q) return;
+                this.renderContent(q.content).then(h => {
+                    let html = `<div class="p-6 h-[80vh] overflow-y-auto">
+                        <div class="flex justify-between items-start mb-4 border-b pb-2">
+                            <div><span class="bg-blue-600 text-white text-xs font-bold px-2 py-1 rounded">#${q.id}</span> <span class="bg-gray-200 px-2 py-1 rounded text-xs ml-2">${q.type.toUpperCase()}</span></div>
+                        </div>
+                        <div class="space-y-4">
+                            <div class="p-4 bg-slate-50 rounded border border-slate-200">
+                                <h4 class="font-bold text-slate-700 mb-2">ĐỀ BÀI:</h4>
+                                <div class="text-lg text-slate-800">${h}</div>
+                                ${q.type==='mcq'?`<div class="mt-2 grid grid-cols-2 gap-2 text-sm">${q.options.map((o,i)=>`<div>${String.fromCharCode(65+i)}. ${o}</div>`).join('')}</div>`:''}
+                                ${q.type==='tf'?`<div class="mt-2 grid grid-cols-1 gap-2 text-sm">${q.options.map((o,i)=>`<div>Ý ${i+1}: ${o}</div>`).join('')}</div>`:''}
+                            </div>
+                            <div class="p-4 bg-green-50 rounded border border-green-100">
+                                <h4 class="font-bold text-green-700 mb-1">ĐÁP ÁN ĐÚNG:</h4>
+                                <div class="font-mono text-xl font-bold">${q.correct}</div>
+                            </div>
+                            <div class="p-4 bg-blue-50 rounded border border-blue-100">
+                                <h4 class="font-bold text-blue-700 mb-1">CƠ SỞ LÝ THUYẾT:</h4>
+                                <div class="text-sm whitespace-pre-wrap">${q.theory}</div>
+                            </div>
+                            <div class="p-4 bg-yellow-50 rounded border border-yellow-100">
+                                <h4 class="font-bold text-yellow-700 mb-1">HƯỚNG DẪN GIẢI (CÁC BƯỚC):</h4>
+                                <ul class="list-disc pl-5 text-sm">${(q.steps||[]).map(s=>`<li>${s}</li>`).join('')}</ul>
+                            </div>
+                            <div class="p-4 bg-indigo-50 rounded border border-indigo-100">
+                                <h4 class="font-bold text-indigo-700 mb-1">LỜI GIẢI CHI TIẾT:</h4>
+                                <div class="text-sm whitespace-pre-wrap">${q.solution}</div>
+                            </div>
+                        </div>
+                    </div>`;
+                    const m = document.getElementById('previewModal'); const c = document.getElementById('previewContent'); c.innerHTML = html; m.style.display = 'block'; MathJax.typesetPromise([c]);
+                });
+            },
+
+            // --- ADMIN VIEW ---
+            switchAdminTab(tab) { this.adminTab = tab; this.renderAdmin(); },
+            renderAdmin() {
+                const isTeacher = this.currentUser.role === 'teacher';
+                const grades = Object.keys(this.tree);
+                let listUsers = this.users;
+                if (isTeacher) listUsers = this.users.filter(u => u.manager === this.currentUser.u);
+                const classList = [...new Set(listUsers.map(u => u.class).filter(c => c))]; 
+                
+                const creditDisplay = `<div class="bg-indigo-900 text-white px-4 py-1 rounded-full text-xs font-bold shadow flex items-center gap-2"><i class="fa-solid fa-wallet"></i> <span id="header-credit">${this.currentUser.credit}</span> CR</div>`;
+                
+                const adminTools = !isTeacher ? `
+                    <div class="bg-white p-1 rounded border flex gap-2">
+                        <button onclick="app.exportPDF()" class="text-xs bg-purple-100 text-purple-700 px-3 py-1 rounded hover:bg-purple-200 flex items-center font-bold" title="In đề thi ra giấy">
+                            <i class="fa-solid fa-print mr-1"></i> In PDF
+                        </button>
+                        <button onclick="app.clearAllData()" class="text-xs bg-red-100 text-red-600 px-3 py-1 rounded hover:bg-red-200 font-bold" title="Xóa sạch dữ liệu để làm lại từ đầu">
+                            <i class="fa-solid fa-trash-can mr-1"></i> Reset
+                        </button>
+                        <button onclick="app.saveFullHTML()" class="text-xs bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-4 py-1 rounded shadow-lg hover:from-blue-700 hover:to-indigo-700 font-bold flex items-center animate-pulse">
+                            <i class="fa-solid fa-file-export mr-2"></i> 🎁 ĐÓNG GÓI & BÀN GIAO (Auto-Sync)
+                        </button>
+                        <button onclick="app.saveToCode()" class="text-xs bg-gray-800 text-white px-3 py-1 rounded shadow hover:bg-gray-900 font-bold flex items-center">
+                            <i class="fa-solid fa-code mr-2"></i> Xuất Web
+                        </button>
+                    </div>` 
+                    : `<div class="text-xs text-amber-600 font-bold bg-amber-50 px-3 py-1 rounded border border-amber-200">
+                        <i class="fa-solid fa-user-tie mr-1"></i> Chế độ Giáo viên
+                       </div>`;
+
+                const walletUI = `
+                    <div class="flex justify-between items-center bg-indigo-50 p-4 rounded-xl border border-indigo-100 mb-6">
+                        <div><h3 class="font-bold text-indigo-800 text-lg">Ví Tín Dụng</h3><p class="text-sm text-indigo-600">Dùng để tạo tài khoản HS và cấp vốn.</p></div>
+                        <div class="text-3xl font-black text-indigo-600">${this.currentUser.role === 'admin' ? '∞' : this.currentUser.credit.toLocaleString()} <span class="text-sm font-normal">CR</span></div>
+                    </div>
+                `;
+                const filterClassUI = isTeacher ? `
+                    <div class="flex gap-2 mb-4 items-center"><span class="font-bold text-slate-600 text-sm"><i class="fa-solid fa-filter"></i> Lọc theo lớp:</span>
+                    <select id="filter-class" onchange="app.renderAdmin()" class="border p-2 rounded text-sm outline-none focus:border-blue-500"><option value="">Tất cả học sinh</option>${classList.map(c => `<option value="${c}" ${document.getElementById('filter-class')?.value === c ? 'selected' : ''}>${c}</option>`).join('')}</select></div>` : '';
+                
+                const selClass = document.getElementById('filter-class')?.value;
+                if(selClass) listUsers = listUsers.filter(u => u.class === selClass);
+
+                const usersTable = `
+                    <div class="animate-fade-in bg-white rounded-xl shadow border overflow-hidden">
+                        <div class="p-4 border-b bg-slate-50 flex justify-between items-center">
+                            <h3 class="font-bold text-slate-700"><i class="fa-solid fa-users"></i> Danh sách quản lý (${listUsers.length})</h3>
+                            <div class="flex gap-2">
+                                <button onclick="app.downloadUserTemplate()" class="bg-green-600 text-white px-3 py-2 rounded-lg text-sm hover:bg-green-700 font-bold shadow"><i class="fa-solid fa-file-excel"></i> Mẫu Excel</button>
+                                <label class="bg-indigo-600 text-white px-3 py-2 rounded-lg text-sm hover:bg-indigo-700 font-bold shadow cursor-pointer"><i class="fa-solid fa-upload"></i> Nhập Excel<input type="file" id="user-excel-upload" accept=".xlsx,.xls" class="hidden" onchange="app.importUserExcel(this)"></label>
+                                <button onclick="app.addUser()" class="bg-blue-600 text-white px-3 py-2 rounded-lg text-sm hover:bg-blue-700 font-bold shadow"><i class="fa-solid fa-user-plus"></i> Thêm HS</button>
+                            </div>
+                        </div>
+                        <div class="overflow-x-auto h-96 overflow-y-auto custom-scrollbar">
+                            <table class="w-full text-sm text-left"><thead class="bg-slate-100 text-slate-600 font-bold uppercase text-xs sticky top-0"><tr><th class="p-3">User</th><th class="p-3">Lớp</th><th class="p-3">Credit</th><th class="p-3">Status</th><th class="p-3 text-right">Action</th></tr></thead><tbody class="divide-y">${listUsers.map(u => `
+                                <tr class="hover:bg-slate-50 transition"><td class="p-3 font-bold text-slate-800">${u.u}</td><td class="p-3"><span class="bg-gray-100 text-gray-600 px-2 py-1 rounded text-xs font-bold">${u.class || 'N/A'}</span></td><td class="p-3 font-mono text-blue-600 font-bold">${u.credit} <button onclick="app.editUserCredit('${u.u}')" class="ml-2 text-slate-400 hover:text-green-600 transition"><i class="fa-solid fa-circle-plus"></i></button></td><td class="p-3"><span class="px-2 py-1 rounded text-xs font-bold ${u.status==='active'?'text-green-600':'text-red-600'}">${u.status.toUpperCase()}</span></td><td class="p-3 text-right space-x-2"><button onclick="app.resetUserPass('${u.u}')" class="text-slate-400 hover:text-blue-600"><i class="fa-solid fa-key"></i></button>${u.role !== 'admin' ? `<button onclick="app.toggleUserStatus('${u.u}')" class="text-slate-400 hover:text-red-600"><i class="fa-solid ${u.status==='active'?'fa-lock-open':'fa-lock'}"></i></button><button onclick="app.deleteUser('${u.u}')" class="text-slate-400 hover:text-red-600" title="Xóa tài khoản"><i class="fa-solid fa-trash"></i></button>` : ''}</td></tr>`).join('')}</tbody></table>
+                        </div>
+                    </div>`;
+
+                let list = [...this.data].reverse();
+                if (this.searchTerm) list = list.filter(q => q.id.toString().includes(this.searchTerm)); 
+                else { if(this.adminFilter.grade) list=list.filter(q=>q.grade===this.adminFilter.grade); if(this.adminFilter.chapter) list=list.filter(q=>q.chapter===this.adminFilter.chapter); if(this.adminFilter.lesson) list=list.filter(q=>q.lesson===this.adminFilter.lesson); }
+
+                const structureTabHtml = `<button onclick="app.switchAdminTab('structure')" class="px-4 py-2 font-bold border-b-2 transition ${this.adminTab==='structure'?'border-amber-600 text-amber-600':'border-transparent text-slate-500 hover:text-slate-700'}"><i class="fa-solid fa-folder-tree mr-2"></i>Cấu trúc</button>`;
+                const teacherSwitchHtml = isTeacher ? `<button onclick="app.switchToStudentView()" class="ml-auto bg-green-600 text-white px-3 py-1 rounded shadow text-sm hover:bg-green-700"><i class="fa-solid fa-school mr-2"></i>Vào lớp dạy (Học sinh)</button>` : '';
+
+                const tabNav = `<div class="flex space-x-2 mb-6 border-b items-center">
+                    <button onclick="app.switchAdminTab('question')" class="px-4 py-2 font-bold border-b-2 transition ${this.adminTab==='question'?'border-blue-600 text-blue-600':'border-transparent text-slate-500 hover:text-slate-700'}"><i class="fa-solid fa-list-check mr-2"></i>Ngân hàng câu hỏi</button>
+                    ${structureTabHtml}
+                    <button onclick="app.switchAdminTab('users')" class="px-4 py-2 font-bold border-b-2 transition ${this.adminTab==='users'?'border-purple-600 text-purple-600':'border-transparent text-slate-500 hover:text-slate-700'}"><i class="fa-solid fa-users-gear mr-2"></i>${isTeacher ? 'Lớp học & Ví' : 'Users & Ví'}</button>
+                    ${teacherSwitchHtml}
+                    <div class="ml-auto flex items-center gap-3">${creditDisplay}</div>
+                </div>`;
+
+                const structureUI = `<div class="grid grid-cols-1 md:grid-cols-3 gap-6 animate-fade-in"><div class="bg-slate-50 p-5 rounded-xl border border-slate-200"><h3 class="font-bold text-slate-700 mb-3"><i class="fa-solid fa-layer-group text-blue-500"></i> Thêm Khối Mới</h3><div class="flex gap-2 mb-4"><input id="new-grade-name" type="text" class="flex-1 border p-2 rounded text-sm focus:outline-blue-500" placeholder="VD: Khối 13"><button onclick="app.addNewGrade()" class="bg-blue-600 text-white px-3 rounded hover:bg-blue-700"><i class="fa-solid fa-plus"></i></button></div></div><div class="bg-slate-50 p-5 rounded-xl border border-slate-200"><h3 class="font-bold text-slate-700 mb-3"><i class="fa-solid fa-folder-open text-amber-500"></i> Thêm Chương</h3><select id="struct-g-sel" onchange="app.setStructG(this.value)" class="w-full border p-2 rounded text-sm mb-2 focus:outline-amber-500"><option value="">-- Chọn Khối cần thêm --</option>${grades.map(g => `<option value="${g}" ${this.structSel.g===g?'selected':''}>${g}</option>`).join('')}</select><div class="flex gap-2"><input id="new-chapter-name" type="text" class="flex-1 border p-2 rounded text-sm focus:outline-amber-500" placeholder="Tên chương mới..."><button onclick="app.addNewChapter()" class="bg-amber-600 text-white px-3 rounded hover:bg-amber-700"><i class="fa-solid fa-plus"></i></button></div></div><div class="bg-slate-50 p-5 rounded-xl border border-slate-200"><h3 class="font-bold text-slate-700 mb-3"><i class="fa-solid fa-file-pen text-green-500"></i> Thêm Bài Học</h3><select id="struct-g-sel-lesson" onchange="app.uiUpdateStructChapters(this.value)" class="w-full border p-2 rounded text-sm mb-2 focus:outline-green-500"><option value="">-- Chọn Khối --</option>${grades.map(g => `<option value="${g}">${g}</option>`).join('')}</select><select id="struct-c-sel-lesson" class="w-full border p-2 rounded text-sm mb-2 focus:outline-green-500"><option value="">-- Chọn Chương trước --</option></select><div class="flex gap-2"><input id="new-lesson-name" type="text" class="flex-1 border p-2 rounded text-sm focus:outline-green-500" placeholder="Tên bài học mới..."><button onclick="app.addNewLesson()" class="bg-green-600 text-white px-3 rounded hover:bg-green-700"><i class="fa-solid fa-plus"></i></button></div></div></div><div class="mt-8 bg-white p-6 rounded-xl border border-slate-200 shadow-sm relative"><div class="flex justify-between items-center mb-4"><h3 class="font-bold text-slate-800">Cây Cấu Trúc Hiện Tại (Xóa tại đây)</h3><button onclick="app.manualSaveTree()" class="text-xs bg-indigo-600 text-white px-4 py-2 rounded-lg shadow hover:bg-indigo-700 font-bold"><i class="fa-solid fa-floppy-disk mr-2"></i>Lưu Cấu trúc</button></div><div class="h-64 overflow-y-auto custom-scrollbar text-sm space-y-4 pr-2">${this.renderTreePreview()}</div></div>`;
+
+                const isEditing = !!this.editId;
+                const formClass = isEditing ? 'bg-yellow-50 border-yellow-400 ring-2 ring-yellow-200' : 'bg-slate-50 border-slate-200';
+                const formHeader = isEditing ? `<i class="fa-solid fa-pen-to-square text-yellow-600"></i> Đang sửa câu: <span class="font-mono text-blue-600">#${this.editId}</span>` : `<label class="text-xs font-bold text-slate-500 uppercase">Vị trí bài học</label>`;
+                const variantOptions = `<option value="0">Gốc</option>` + Array.from({length:5}, (_,i)=>`<option value="${i+1}">Biến thể ${i+1}</option>`).join('');
+                
+                const manualUI = `<div class="space-y-3 mb-4"><div class="grid grid-cols-2 gap-2"><div class="space-y-1"><label class="text-xs font-bold text-slate-500">Dạng thức</label><select id="adm-type" class="border p-2 rounded text-sm w-full" onchange="app.renderManualOptionsUI()"><option value="mcq">Trắc nghiệm</option><option value="short">Trả lời ngắn</option><option value="tf">Đúng/Sai</option></select></div><div class="space-y-1"><label class="text-xs font-bold text-slate-500">Mức độ</label><select id="adm-lvl" class="border p-2 rounded text-sm w-full"><option value="1">Mức 1 (Biết)</option><option value="2">Mức 2 (Hiểu)</option><option value="3">Mức 3 (Vận dụng)</option></select></div></div><div class="space-y-1"><label class="text-xs font-bold text-slate-500">Loại câu hỏi</label><select id="adm-var" class="w-full border p-2 rounded text-sm">${variantOptions}</select></div><textarea id="adm-content" class="w-full border p-3 rounded h-24 text-sm focus:ring-blue-500 focus:border-blue-500" placeholder="Nội dung câu hỏi (LaTeX: $...$, Bảng: \\begin{tikzpicture}...)"></textarea><div id="manual-options-area"></div></div><div class="bg-amber-50 p-3 rounded border border-amber-100 space-y-2"><label class="text-xs font-bold text-amber-700 uppercase"><i class="fa-solid fa-robot"></i> Dữ liệu Gia sư AI</label><textarea id="adm-theory" class="w-full border p-2 rounded text-sm h-16" placeholder="Cơ sở lý thuyết (Nguồn SGK...)"></textarea><textarea id="adm-steps" class="w-full border p-2 rounded text-sm h-16" placeholder="Hướng dẫn giải (Các bước...)"></textarea><textarea id="adm-sol" class="w-full border p-2 rounded text-sm h-20" placeholder="Lời giải chi tiết"></textarea></div><div class="flex gap-2 mt-4"><button onclick="app.saveQuestion()" class="flex-1 bg-blue-600 text-white py-2 rounded hover:bg-blue-700 font-bold shadow"><i class="fa-solid fa-save"></i> ${this.editId ? 'Cập nhật' : 'Lưu câu hỏi'}</button>${this.editId ? '<button onclick="app.cancelEdit()" class="px-4 bg-gray-200 rounded hover:bg-gray-300">Huỷ</button>' : ''}</div>`;
+                const jsonUI = `<div class="space-y-4 animate-fade-in"><div class="bg-green-50 p-4 rounded-xl border border-green-200"><h3 class="font-bold text-green-800 mb-2"><i class="fa-solid fa-file-code mr-2"></i> Nhập dữ liệu từ file JSON</h3><div class="text-xs text-green-700 mb-3 border-l-2 border-green-500 pl-2">⚠️ <b>Lưu ý:</b> Vui lòng chọn <b>Khối, Chương, Bài</b> ở mục "Vị trí bài học" phía trên trước. Các câu hỏi trong file sẽ được gán vào bài học đó.</div><input type="file" id="json-input" accept=".json" class="block w-full text-sm text-slate-500"/><button onclick="app.importJSONFile()" class="mt-4 w-full bg-green-600 text-white py-2 rounded-lg font-bold shadow hover:bg-green-700">Tải lên & Gán vào bài học</button></div></div>`;
+                const wordUI = `<div class="space-y-4"><div class="bg-indigo-50 p-3 rounded border border-indigo-100 text-xs text-indigo-700 mb-2"><b>Định dạng:</b> .docx, bắt đầu "Câu 1:", đáp án "A.", "B.", lời giải "Lời giải".</div><div class="flex items-center gap-2"><span class="text-sm font-bold text-slate-600 whitespace-nowrap">Dạng thức:</span><select id="word-type" class="border p-2 rounded text-sm w-full"><option value="auto">✨ Tự động nhận diện (Mặc định)</option><option value="mcq">Trắc nghiệm</option><option value="tf">Đúng/Sai</option><option value="short">Trả lời ngắn</option></select></div><div class="grid grid-cols-2 gap-2"><div class="space-y-1"><label class="text-xs font-bold text-slate-500">Mức độ</label><select id="word-lvl" class="border p-2 rounded text-sm w-full"><option value="1">Mức 1 (Biết)</option><option value="2">Mức 2 (Hiểu)</option><option value="3">Mức 3 (Vận dụng)</option></select></div><div class="space-y-1"><label class="text-xs font-bold text-slate-500">Loại câu hỏi</label><select id="word-var" class="border p-2 rounded text-sm w-full">${variantOptions}</select></div></div><div class="flex items-center gap-4"><label class="cursor-pointer bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700 font-bold shadow flex items-center gap-2"><i class="fa-solid fa-file-word"></i> Nhập từ Word (.docx)<input type="file" onchange="app.handleWordUpload(event)" class="hidden" accept=".docx"></label><span id="word-status" class="text-sm text-slate-500 italic"></span></div><div id="word-preview" class="space-y-4 max-h-[600px] overflow-y-auto p-2 border rounded bg-slate-50 hidden"></div><button id="btn-save-word" onclick="app.saveWordDrafts()" class="hidden w-full bg-green-600 text-white py-2 rounded hover:bg-green-700 font-bold shadow"><i class="fa-solid fa-cloud-arrow-up"></i> Tải lên</button></div>`;
+                
+                const questionUI = `<div class="grid grid-cols-1 lg:grid-cols-12 gap-8 animate-fade-in"><div class="lg:col-span-5 space-y-4"><div id="question-form-container" class="${formClass} p-4 rounded-xl border transition-all duration-300"><div class="mb-4 space-y-2"><h3 class="mb-2 text-sm">${formHeader}</h3><select id="adm-g" onchange="app.setG(this.value)" class="w-full border p-2 rounded text-sm"><option value="">-- Chọn Khối --</option>${grades.map(g => `<option value="${g}" ${this.sel.g===g?'selected':''}>${g}</option>`).join('')}</select><select id="adm-c" onchange="app.setC(this.value)" class="w-full border p-2 rounded text-sm"><option value="">-- Chọn Chương --</option></select><select id="adm-l" onchange="app.setL(this.value)" class="w-full border p-2 rounded text-sm"><option value="">-- Chọn Bài --</option></select></div><div class="flex border-b mb-4"><button onclick="app.setMode('manual')" class="px-4 py-2 text-sm font-bold ${this.adminMode==='manual'?'border-b-2 border-blue-600 text-blue-600':'text-slate-500'}">Thủ công</button><button onclick="app.setMode('json')" class="px-4 py-2 text-sm font-bold ${this.adminMode==='json'?'border-b-2 border-green-600 text-green-600':'text-slate-500'}">Nhập JSON</button><button onclick="app.setMode('word')" class="px-4 py-2 text-sm font-bold ${this.adminMode==='word'?'border-b-2 border-indigo-600 text-indigo-600':'text-slate-500'}">Word</button></div>${this.adminMode==='manual' ? manualUI : (this.adminMode==='json' ? jsonUI : wordUI)}</div></div><div class="lg:col-span-7"><div class="flex flex-col gap-3 mb-3"><div class="flex justify-between items-center"><h3 class="font-bold text-slate-700">Ngân hàng câu hỏi (${list.length})</h3>${adminTools}</div><div class="flex gap-2"><div class="relative flex-grow"><i class="fa-solid fa-magnifying-glass absolute left-3 top-2 text-slate-400 text-sm"></i><input type="text" id="search-id" value="${this.searchTerm}" onkeyup="app.handleSearch(this.value)" placeholder="Tìm nhanh ID câu hỏi..." class="w-full pl-8 pr-3 py-1.5 border rounded text-sm focus:outline-blue-500 focus:border-blue-500 shadow-sm"></div><div class="bg-white p-1 rounded border flex gap-1 flex-shrink-0"><select id="filt-g" onchange="app.setFilter('grade',this.value)" class="p-1 text-xs outline-none bg-transparent max-w-[100px]"><option value="">Tất cả Khối</option>${grades.map(g=>`<option value="${g}">${g}</option>`).join('')}</select></div></div></div><div class="h-[800px] overflow-y-auto custom-scrollbar space-y-3 pr-2">${list.map(q => `<div class="border p-3 rounded-lg bg-white relative hover:shadow-md transition group"><div class="flex gap-2 mb-1"><span class="text-[10px] font-bold bg-blue-100 text-blue-700 px-2 rounded">#${q.id}</span><span class="text-[10px] bg-gray-100 px-2 rounded truncate max-w-[200px]" title="${q.lesson}">${q.lesson}</span><span class="text-[10px] ${q.variant===0?'bg-green-100 text-green-700':'bg-purple-100 text-purple-700'} px-2 rounded">${q.variant===0?'Gốc':`BT ${q.variant}`}</span></div><div class="text-sm line-clamp-2 mb-2 word-content">${q.content}</div><div class="flex gap-2 text-xs mt-3 border-t pt-2"><button onclick="app.editQ('${q.id}')" class="bg-blue-50 text-blue-600 border border-blue-200 px-3 py-1 rounded hover:bg-blue-100 font-medium">Sửa</button><button onclick="app.cloneToVariant('${q.id}')" class="bg-purple-50 text-purple-600 border border-purple-200 px-3 py-1 rounded hover:bg-purple-100 font-medium">Tạo biến thể</button><button onclick="app.delQ('${q.id}')" class="bg-red-50 text-red-600 border border-red-200 px-3 py-1 rounded hover:bg-red-100 font-medium">Xoá</button><button onclick="app.viewQuestionDetail('${q.id}')" class="bg-slate-50 text-slate-600 border border-slate-200 px-3 py-1 rounded hover:bg-slate-100 font-medium"><i class="fa-solid fa-eye"></i> Xem</button></div></div>`).join('')}${list.length === 0 ? '<div class="text-center text-slate-400 py-10 italic">Không tìm thấy câu hỏi nào.</div>' : ''}</div></div></div>`;
+
+                let mainContent = '';
+                if(this.adminTab === 'question') mainContent = questionUI;
+                else if(this.adminTab === 'structure') mainContent = structureUI;
+                else if(this.adminTab === 'users') mainContent = walletUI + filterClassUI + usersTable;
+
+                document.getElementById('app-container').innerHTML = `
+                    <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 fade-in w-full max-w-7xl mx-auto">
+                        <div class="flex justify-between items-center mb-4">
+                            <h2 class="text-xl font-bold text-slate-800">Trang Quản Trị ${isTeacher ? '(Giáo viên)' : '(Admin)'}</h2>
+                            <button onclick="app.goLanding()" class="text-red-500 text-sm hover:underline"><i class="fa-solid fa-right-from-bracket"></i> Thoát</button>
+                        </div>
+                        ${tabNav}
+                        ${mainContent}
+                    </div>`;
+
+                if(this.adminTab === 'question') {
+                    this.uiUpdateChapters();
+                    this.renderManualOptionsUI();
+                    if(this.editId) this.populateEditForm();
+                    if (this.adminMode === 'word' && this.wordDrafts.length > 0) this.renderWordPreview();
+                }
+            },
+
+            // --- ADMIN FUNCTIONS ---
+            addUser() {
+                const isTeacher = this.currentUser.role === 'teacher';
+                const COST_CREATE_USER = 50; 
+                if (isTeacher && this.currentUser.credit < COST_CREATE_USER) {
+                    return alert(`⛔ KHÔNG ĐỦ CREDIT!\nPhí tạo tài khoản: ${COST_CREATE_USER} CR.\nSố dư của bạn: ${this.currentUser.credit} CR.`);
+                }
+                const u = prompt("Nhập tên đăng nhập học sinh:");
+                if (!u) return;
+                if (this.users.find(x => x.u.toLowerCase() === u.toLowerCase())) return alert("Tên đăng nhập đã tồn tại!");
+                
+                let role = 'student'; 
+                if (!isTeacher) { 
+                    role = prompt("Nhập vai trò (teacher / student):", "student");
+                    if (role !== 'teacher' && role !== 'student') return alert("Role không hợp lệ!");
+                }
+                const className = prompt("Nhập tên lớp:", "12A1");
+                const p = prompt("Nhập mật khẩu mặc định:", "123");
+
+                if (isTeacher) {
+                    if (!confirm(`Xác nhận tạo HS "${u}"?\nBạn sẽ bị trừ ${COST_CREATE_USER} CR.`)) return;
+                    this.currentUser.credit -= COST_CREATE_USER;
+                    this.saveUsers(); 
+                }
+                this.users.push({ u, p, role, credit: 0, status: 'active', lastLogin: '', manager: isTeacher ? this.currentUser.u : '', class: className });
+                this.saveUsers();
+                this.renderAdmin();
+                alert(isTeacher ? `✅ Đã thêm thành công!\nSố dư còn lại: ${this.currentUser.credit} CR.` : "Đã thêm User thành công!");
+            },
+            deleteUser(uName) {
+                const isTeacher = this.currentUser.role === 'teacher';
+                const targetUser = this.users.find(u => u.u === uName);
+                
+                if (!targetUser) return;
+                if (targetUser.role === 'admin') return alert("Không thể xóa Admin!");
+                if (isTeacher && targetUser.manager !== this.currentUser.u) return alert("Bạn không có quyền xóa user này!");
+                
+                if (confirm(`Xác nhận xóa tài khoản "${uName}"?\nHành động này không thể hoàn tác.`)) {
+                    this.users = this.users.filter(u => u.u !== uName);
+                    this.saveUsers();
+                    this.renderAdmin();
+                }
+            },
+            
+            // --- EXCEL USER IMPORT ---
+            downloadUserTemplate() {
+                const ws = XLSX.utils.aoa_to_sheet([["Username", "Password", "Class", "Role (student/teacher)"]]);
+                const wb = XLSX.utils.book_new();
+                XLSX.utils.book_append_sheet(wb, ws, "Users");
+                XLSX.writeFile(wb, "Mau_DanhSach_HocSinh.xlsx");
+            },
+            importUserExcel(input) {
+                const isTeacher = this.currentUser.role === 'teacher';
+                const COST = 50;
+                const file = input.files[0];
+                if(!file) return;
+                
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const data = new Uint8Array(e.target.result);
+                    const workbook = XLSX.read(data, {type: 'array'});
+                    const jsonData = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]], {header: 1});
+                    // Bỏ header (row 0)
+                    const rows = jsonData.slice(1).filter(r => r[0]); 
+                    
+                    if(isTeacher) {
+                        const totalCost = rows.length * COST;
+                        if(this.currentUser.credit < totalCost) {
+                            return alert(`⛔ KHÔNG ĐỦ CREDIT!\nCần ${totalCost} CR để nhập ${rows.length} học sinh.\nSố dư: ${this.currentUser.credit} CR.`);
+                        }
+                        if(!confirm(`Xác nhận nhập ${rows.length} học sinh?\nTổng phí: ${totalCost} CR.`)) return;
+                        this.currentUser.credit -= totalCost;
+                    }
+
+                    let count = 0;
+                    rows.forEach(row => {
+                        const [u, p, cls, r] = row;
+                        if(u && !this.users.find(x => x.u.toLowerCase() === u.toString().toLowerCase())) {
+                            this.users.push({
+                                u: u.toString(),
+                                p: p ? p.toString() : '123',
+                                role: isTeacher ? 'student' : (r || 'student'),
+                                credit: 0,
+                                status: 'active',
+                                lastLogin: '',
+                                manager: isTeacher ? this.currentUser.u : '',
+                                class: cls ? cls.toString() : 'Unknown'
+                            });
+                            count++;
+                        }
+                    });
+                    this.saveUsers();
+                    this.renderAdmin();
+                    alert(`✅ Đã nhập thành công ${count} tài khoản!`);
+                };
+                reader.readAsArrayBuffer(file);
+                input.value = ''; // Reset input
+            },
+
+            // --- ADMIN Q&A UTILS ---
+            toggleUserStatus(uName) {
+                const user = this.users.find(u => u.u === uName);
+                if (user && user.role !== 'admin') {
+                    user.status = user.status === 'active' ? 'locked' : 'active';
+                    this.saveUsers();
+                    this.renderAdmin();
+                } else alert("Không thể khóa Admin!");
+            },
+            resetUserPass(uName) {
+                const newP = prompt(`Nhập mật khẩu mới cho ${uName}:`);
+                if(newP) {
+                    const user = this.users.find(u => u.u === uName);
+                    if(user) { user.p = newP; this.saveUsers(); alert("Đã đổi mật khẩu!"); }
+                }
+            },
+            editUserCredit(targetUser) {
+                const isTeacher = this.currentUser.role === 'teacher';
+                const user = this.users.find(u => u.u === targetUser);
+                if (!user) return;
+                if (!isTeacher) {
+                    const amount = prompt(`[ADMIN] Nhập số Credit muốn set cho ${targetUser}:`, "1000");
+                    if (amount && !isNaN(amount)) {
+                        user.credit = parseInt(amount);
+                        this.saveUsers();
+                        this.renderAdmin();
+                    }
+                    return;
+                }
+                const amountStr = prompt(`[CHUYỂN KHOẢN]\nSố dư của bạn: ${this.currentUser.credit} CR.\nNhập số Credit muốn nạp cho HS ${targetUser}:`);
+                const amount = parseInt(amountStr);
+                if (!amount || isNaN(amount) || amount <= 0) return;
+                if (this.currentUser.credit < amount) return alert(`⛔ KHÔNG ĐỦ CREDIT!\nBạn chỉ có ${this.currentUser.credit} CR.`);
+                if (confirm(`Xác nhận chuyển ${amount} CR cho học sinh ${targetUser}?`)) {
+                    this.currentUser.credit -= amount;
+                    user.credit += amount;
+                    this.saveUsers();
+                    this.renderAdmin();
+                    alert("✅ Nạp thành công!");
+                }
+            },
+            switchToStudentView() {
+                if(this.currentUser.role === 'teacher') {
+                    if(this.deductCredit(0, "Chuyển chế độ")) this.renderStudent();
+                }
+            },
+            renderManualOptionsUI() {
+                const type = document.getElementById('adm-type') ? document.getElementById('adm-type').value : 'mcq';
+                const container = document.getElementById('manual-options-area');
+                if(!container) return;
+                if(type === 'mcq') {
+                    container.innerHTML = `<textarea id="adm-opts" class="w-full border p-3 rounded h-16 text-sm" placeholder="Đáp án cách nhau bởi dấu | (VD: A|B|C|D)"></textarea><input id="adm-correct" class="w-full border p-2 rounded text-sm mt-2" placeholder="Đáp án đúng (Index 0-3 hoặc text)">`;
+                } else if(type === 'tf') {
+                    container.innerHTML = `<div class="space-y-2 border p-2 rounded bg-slate-50"><div class="text-xs font-bold">Các ý đúng/sai:</div>${[0,1,2,3].map(i => `<div class="flex gap-2 items-center"><input class="border p-1 w-full text-sm" id="tf-opt-${i}" placeholder="Ý ${i+1}"><select class="border p-1 text-sm" id="tf-val-${i}"><option value="0">Đúng</option><option value="1">Sai</option></select></div>`).join('')}</div><input type="hidden" id="adm-opts"><input type="hidden" id="adm-correct">`;
+                } else {
+                    container.innerHTML = `<input id="adm-correct" class="w-full border p-2 rounded text-sm" placeholder="Nhập đáp án đúng (Số hoặc chữ)"><input type="hidden" id="adm-opts">`;
+                }
+            },
+            handleSearch(val) { this.searchTerm = val.trim(); this.renderAdmin(); },
+            setG(v) { this.sel.g = v; this.sel.c = ''; this.sel.l = ''; this.uiUpdateChapters(); },
+            setC(v) { this.sel.c = v; this.sel.l = ''; this.uiUpdateLessons(); },
+            setL(v) { this.sel.l = v; },
+            setStructG(val) { this.structSel.g = val; this.renderAdmin(); },
+            uiUpdateChapters() { const c = document.getElementById('adm-c'); if(!c) return; const val = this.sel.g; let html = '<option value="">-- Chọn Chương --</option>'; if(val && this.tree[val]) html += Object.keys(this.tree[val]).map(k => `<option value="${k}" ${this.sel.c===k?'selected':''}>${k}</option>`).join(''); c.innerHTML = html; this.uiUpdateLessons(); },
+            uiUpdateLessons() { const l = document.getElementById('adm-l'); if(!l) return; const gv = this.sel.g; const cv = this.sel.c; let html = '<option value="">-- Chọn Bài --</option>'; if(gv && cv && this.tree[gv][cv]) html += this.tree[gv][cv].map(k => `<option value="${k}" ${this.sel.l===k?'selected':''}>${k}</option>`).join(''); l.innerHTML = html; },
+            uiUpdateStructChapters(grade) { const cSel = document.getElementById('struct-c-sel-lesson'); if(!cSel) return; let html = '<option value="">-- Chọn Chương --</option>'; if(grade && this.tree[grade]) { Object.keys(this.tree[grade]).forEach(c => html += `<option value="${c}">${c}</option>`); } cSel.innerHTML = html; },
+            
+            saveQuestion() {
+                if (this.currentUser.role === 'teacher') if (!this.deductCredit(10, "Lưu/Sửa câu hỏi")) return;
+                const type = document.getElementById('adm-type').value;
+                let options = [], correct = "";
+                if(type === 'mcq') {
+                    options = document.getElementById('adm-opts').value.split('|').map(s=>s.trim());
+                    correct = document.getElementById('adm-correct').value.trim();
+                } else if(type === 'tf') {
+                    options = [0,1,2,3].map(i => document.getElementById(`tf-opt-${i}`).value);
+                    correct = [0,1,2,3].map(i => document.getElementById(`tf-val-${i}`).value).join('|');
+                } else {
+                    correct = document.getElementById('adm-correct').value.trim();
+                }
+                
+                let baseId;
+                if (this.editId) baseId = this.editId;
+                else {
+                    const prefix = this.generateBasePrefix(this.sel.g, this.sel.c, this.sel.l, type, parseInt(document.getElementById('adm-lvl').value));
+                    const nextIndex = this.getNextIndex(prefix) + 1;
+                    baseId = `${prefix}_${String(nextIndex).padStart(2, '0')}`;
+                }
+
+                const q = { 
+                    id: baseId || Date.now(), 
+                    grade: this.sel.g, chapter: this.sel.c, lesson: this.sel.l, 
+                    type: type, 
+                    level: parseInt(document.getElementById('adm-lvl').value), 
+                    variant: parseInt(document.getElementById('adm-var').value), 
+                    content: document.getElementById('adm-content').value.trim(), 
+                    options: options, correct: correct, 
+                    theory: document.getElementById('adm-theory').value, 
+                    steps: document.getElementById('adm-steps').value.split('\n'), 
+                    solution: document.getElementById('adm-sol').value 
+                };
+                
+                if(!q.grade || !q.lesson || !q.content) return alert("Thiếu thông tin bắt buộc!");
+                if(this.editId) { const idx = this.data.findIndex(i => i.id == this.editId); if(idx!==-1) { this.data[idx] = q; alert("Đã cập nhật!"); } this.editId = null; } else { this.data.push(q); alert("Đã thêm mới!"); }
+                
+                localStorage.setItem('g_rescue_v6', JSON.stringify(this.data)); this.renderAdmin();
+            },
+            
+            generateBasePrefix(grade, chapter, lesson, type, level) {
+                const clean = (str) => { if(!str) return "X"; return str.replace(/Khối\s/i, 'K').replace(/Chương\s/i, 'C').split(':')[0].replace(/Bài\s/i, 'B').split('.')[0].replace(/[^a-zA-Z0-9]/g, ''); };
+                const safeType = (type || 'MCQ').toUpperCase();
+                return `${clean(grade)}_${clean(chapter)}_${clean(lesson)}_${safeType}_L${level||1}`;
+            },
+            getNextIndex(prefix) {
+                const existing = this.data.filter(q => q.id.toString().startsWith(prefix) && q.variant === 0);
+                let maxIndex = 0; existing.forEach(q => { const parts = q.id.toString().split('_'); const num = parseInt(parts[parts.length - 1]); if (!isNaN(num) && num > maxIndex) maxIndex = num; });
+                return maxIndex;
+            },
+            delQ(id) {
+                if (this.currentUser.role === 'teacher') if (!this.deductCredit(10, "Xóa câu hỏi")) return;
+                if (confirm(`Xóa câu hỏi #${id}?`)) {
+                    this.data = this.data.filter(q => q.id != id);
+                    localStorage.setItem('g_rescue_v6', JSON.stringify(this.data));
+                    this.renderAdmin();
+                }
+            },
+            cloneToVariant(originalId) {
+                const q = this.data.find(x => x.id === originalId); if (!q) return;
+                let baseId = originalId; if (originalId.toString().includes('_V')) baseId = originalId.split('_V')[0];
+                const variants = this.data.filter(x => x.id.toString().startsWith(baseId + '_V'));
+                let maxV = 0; variants.forEach(v => { const vNum = parseInt(v.id.toString().split('_V')[1]); if(!isNaN(vNum) && vNum > maxV) maxV = vNum; });
+                const nextV = maxV + 1; const newVariantId = `${baseId}_V${nextV}`;
+                const clone = JSON.parse(JSON.stringify(q)); clone.id = newVariantId; clone.variant = nextV; clone.content = `(Biến thể của ${baseId}) ` + clone.content;
+                this.data.push(clone); localStorage.setItem('g_rescue_v6', JSON.stringify(this.data)); this.renderAdmin();
+                setTimeout(() => { this.editQ(newVariantId); alert(`Đã tạo biến thể ${newVariantId}.`); }, 100);
+            },
+
+            editQ(id) { const q = this.data.find(i => i.id == id); if(!q) return; this.editId = id; this.sel.g = q.grade; this.sel.c = q.chapter; this.sel.l = q.lesson; this.setMode('manual'); document.getElementById('question-form-container').scrollIntoView({ behavior: 'smooth' }); },
+            populateEditForm() { 
+                const q = this.data.find(i => i.id == this.editId); if(!q) return; 
+                document.getElementById('adm-type').value = q.type; this.renderManualOptionsUI();
+                document.getElementById('adm-lvl').value = q.level; document.getElementById('adm-var').value = q.variant || 0; document.getElementById('adm-content').value = q.content; 
+                if(q.type === 'mcq') { document.getElementById('adm-opts').value = q.options.join('|'); document.getElementById('adm-correct').value = q.correct; } 
+                else if(q.type === 'tf') { const corrects = q.correct.split('|'); q.options.forEach((o, i) => { document.getElementById(`tf-opt-${i}`).value = o; document.getElementById(`tf-val-${i}`).value = corrects[i]; }); } 
+                else { document.getElementById('adm-correct').value = q.correct; }
+                document.getElementById('adm-theory').value = q.theory || ''; document.getElementById('adm-steps').value = (q.steps||[]).join('\n'); document.getElementById('adm-sol').value = q.solution || ''; document.getElementById('adm-g').value = q.grade; this.uiUpdateChapters(); document.getElementById('adm-c').value = q.chapter; this.uiUpdateLessons(); document.getElementById('adm-l').value = q.lesson; 
+            },
+            cancelEdit() { this.editId = null; this.renderAdmin(); },
+
+            setMode(m) { this.adminMode = m; this.renderAdmin(); },
+            setFilter(k, v) { this.adminFilter[k] = v; if(k==='grade'){this.adminFilter.chapter='';this.adminFilter.lesson='';} if(k==='chapter')this.adminFilter.lesson=''; this.renderAdmin(); },
+            
+            // --- TREE MANAGEMENT ---
+            renderTreePreview() {
+                let html = '';
+                for(const g in this.tree) {
+                    html += `<div class="mb-2 group/g"><div class="flex items-center gap-2"><span class="font-bold text-blue-700 bg-blue-50 px-2 py-1 rounded text-sm">${g}</span><i onclick="app.deleteGrade('${g}')" class="fa-solid fa-trash-can text-xs delete-btn" title="Xóa Khối"></i></div><div class="pl-4 border-l-2 border-slate-100 ml-2 mt-1 space-y-2">`;
+                    const chapters = this.tree[g]; if(Object.keys(chapters).length === 0) html += `<div class="text-slate-400 italic text-xs pl-2">Chưa có chương nào</div>`;
+                    for(const c in chapters) {
+                        html += `<div><div class="flex items-center gap-2"><span class="font-semibold text-amber-700 text-sm">${c}</span><i onclick="app.deleteChapter('${g}', '${c}')" class="fa-solid fa-trash-can text-[10px] delete-btn" title="Xóa Chương"></i></div><div class="pl-4 text-slate-500 text-xs mt-1 grid grid-cols-2 gap-1">`;
+                        if(chapters[c].length === 0) html += `<span class="italic text-slate-300">Chưa có bài nào</span>`;
+                        chapters[c].forEach(l => html += `<span class="bg-slate-50 p-1 rounded border border-slate-100 truncate hover:bg-slate-100 flex justify-between items-center group/l" title="${l}"><span class="truncate"><i class="fa-solid fa-file text-[8px] mr-1 text-slate-400"></i>${l}</span> <i onclick="app.deleteLesson('${g}', '${c}', '${l}')" class="fa-solid fa-xmark ml-1 text-[10px] delete-btn"></i></span>`);
+                        html += `</div></div>`;
+                    }
+                    html += `</div></div>`;
+                }
+                return html;
+            },
+            saveTree() { localStorage.setItem('g_rescue_tree_v1', JSON.stringify(this.tree)); this.renderAdmin(); },
+            manualSaveTree() { this.saveTree(); alert("Đã lưu cấu trúc!"); },
+            addNewGrade() { const n = document.getElementById('new-grade-name').value.trim(); if(n && !this.tree[n]) { this.tree[n] = {}; this.saveTree(); } },
+            addNewChapter() { const g = document.getElementById('struct-g-sel').value; const n = document.getElementById('new-chapter-name').value.trim(); if(g && n && !this.tree[g][n]) { this.tree[g][n] = []; this.saveTree(); } },
+            addNewLesson() { const g = document.getElementById('struct-g-sel-lesson').value; const c = document.getElementById('struct-c-sel-lesson').value; const n = document.getElementById('new-lesson-name').value.trim(); if(g && c && n) { this.tree[g][c].push(n); this.tree[g][c] = [...new Set(this.tree[g][c])]; this.saveTree(); } },
+            deleteGrade(g) { if(confirm(`Xóa ${g}?`)) { delete this.tree[g]; this.saveTree(); } },
+            deleteChapter(g, c) { if(confirm(`Xóa ${c}?`)) { delete this.tree[g][c]; this.saveTree(); } },
+            deleteLesson(g, c, l) { if(confirm(`Xóa ${l}?`)) { this.tree[g][c] = this.tree[g][c].filter(item => item !== l); this.saveTree(); } },
+
+            // --- VIEW QUESTION DETAIL (ADMIN) ---
+            viewQuestionDetail(id) {
+                const q = this.data.find(item => item.id == id); if (!q) return;
+                this.renderContent(q.content).then(h => {
+                    let html = `<div class="p-6 h-[80vh] overflow-y-auto">
+                        <div class="flex justify-between items-start mb-4 border-b pb-2">
+                            <div><span class="bg-blue-600 text-white text-xs font-bold px-2 py-1 rounded">#${q.id}</span> <span class="bg-gray-200 px-2 py-1 rounded text-xs ml-2">${q.type.toUpperCase()}</span></div>
+                        </div>
+                        <div class="space-y-4">
+                            <div class="p-4 bg-slate-50 rounded border border-slate-200">
+                                <h4 class="font-bold text-slate-700 mb-2">ĐỀ BÀI:</h4>
+                                <div class="text-lg text-slate-800">${h}</div>
+                                ${q.type==='mcq'?`<div class="mt-2 grid grid-cols-2 gap-2 text-sm">${q.options.map((o,i)=>`<div>${String.fromCharCode(65+i)}. ${o}</div>`).join('')}</div>`:''}
+                                ${q.type==='tf'?`<div class="mt-2 grid grid-cols-1 gap-2 text-sm">${q.options.map((o,i)=>`<div>Ý ${i+1}: ${o}</div>`).join('')}</div>`:''}
+                            </div>
+                            <div class="p-4 bg-green-50 rounded border border-green-100">
+                                <h4 class="font-bold text-green-700 mb-1">ĐÁP ÁN ĐÚNG:</h4>
+                                <div class="font-mono text-xl font-bold">${q.correct}</div>
+                            </div>
+                            <div class="p-4 bg-blue-50 rounded border border-blue-100">
+                                <h4 class="font-bold text-blue-700 mb-1">CƠ SỞ LÝ THUYẾT:</h4>
+                                <div class="text-sm whitespace-pre-wrap">${q.theory}</div>
+                            </div>
+                            <div class="p-4 bg-yellow-50 rounded border border-yellow-100">
+                                <h4 class="font-bold text-yellow-700 mb-1">HƯỚNG DẪN GIẢI (CÁC BƯỚC):</h4>
+                                <ul class="list-disc pl-5 text-sm">${(q.steps||[]).map(s=>`<li>${s}</li>`).join('')}</ul>
+                            </div>
+                            <div class="p-4 bg-indigo-50 rounded border border-indigo-100">
+                                <h4 class="font-bold text-indigo-700 mb-1">LỜI GIẢI CHI TIẾT:</h4>
+                                <div class="text-sm whitespace-pre-wrap">${q.solution}</div>
+                            </div>
+                        </div>
+                    </div>`;
+                    const m = document.getElementById('previewModal'); const c = document.getElementById('previewContent'); c.innerHTML = html; m.style.display = 'block'; MathJax.typesetPromise([c]);
+                });
+            },
+
+            // --- EXPORT UTILS ---
+            saveFullHTML() {
+                const now = new Date();
+                const timeStr = `G-Rescue-${this.currentUser.u}-${now.getHours()}h${String(now.getMinutes()).padStart(2,'0')}_${String(now.getDate()).padStart(2,'0')}-${String(now.getMonth()+1).padStart(2,'0')}-${now.getFullYear()}`;
+                const fileName = prompt("Đặt tên cho file đóng gói:", timeStr);
+                if (!fileName) return;
+
+                let html = document.documentElement.outerHTML;
+                const newVersion = Date.now();
+                
+                // Lọc Users: Loại bỏ Admin khi đóng gói bản release
+                const exportUsers = this.users.filter(u => u.role !== 'admin');
+                
+                // Inject Data
+                html = html.replace(/const DATA_VERSION = \d+;/, `const DATA_VERSION = ${newVersion};`);
+                html = html.replace(/const INITIAL_DATA = \[.*?\];/s, `const INITIAL_DATA = ${JSON.stringify(this.data)};`);
+                html = html.replace(/const INITIAL_TREE = \{.*?\};/s, `const INITIAL_TREE = ${JSON.stringify(this.tree)};`);
+                html = html.replace(/const INITIAL_USERS = \[.*?\];/s, `const INITIAL_USERS = ${JSON.stringify(exportUsers)};`);
+
+                // XÓA DẤU VẾT ADMIN TRONG GOLANDING (BẢO MẬT TUYỆT ĐỐI)
+                const cleanGoLanding = `goLanding() { 
+                this.currentUser = null;
+                document.getElementById('app-container').innerHTML = \`
+                    <div class="max-w-5xl mx-auto py-12 fade-in">
+                        <div class="text-center mb-10"><h2 class="text-4xl font-bold text-slate-800 mb-2 tracking-tight">Chào mừng đến với G-RESCUE</h2><p class="text-slate-500">Hệ thống gia sư AI thông minh & Quản lý ngân hàng đề</p></div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-10 max-w-3xl mx-auto">
+                            <!-- Học Sinh -->
+                            <div onclick="app.login('student')" class="role-card bg-white p-8 rounded-2xl shadow-lg border border-blue-50 cursor-pointer text-center group"><div class="w-20 h-20 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:bg-blue-600 transition"><i class="fa-solid fa-user-graduate text-3xl text-blue-600 group-hover:text-white"></i></div><h3 class="text-xl font-bold text-slate-800">Học sinh</h3><p class="text-sm text-slate-500 mt-2">Luyện đề, tra cứu, học sâu với AI Mentor.</p></div>
+                            
+                            <!-- Giáo Viên -->
+                            <div onclick="app.login('teacher')" class="role-card bg-white p-8 rounded-2xl shadow-lg border border-amber-50 cursor-pointer text-center group"><div class="w-20 h-20 bg-amber-100 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:bg-amber-600 transition"><i class="fa-solid fa-chalkboard-user text-3xl text-amber-600 group-hover:text-white"></i></div><h3 class="text-xl font-bold text-slate-800">Giáo viên</h3><p class="text-sm text-slate-500 mt-2">Quản lý lớp học & Ngân hàng đề.</p></div>
+                        </div>
+                    </div>\`;
+            },`;
+                
+                html = html.replace(/goLanding\(\)\s*\{[\s\S]*?\},/, cleanGoLanding);
+                html = html.replace(/<script type="text\/javascript" src="\/_next\/static\/.*"><\/script>/g, '');
+
+                const blob = new Blob([html], {type: 'text/html'});
+                const a = document.createElement('a');
+                a.href = URL.createObjectURL(blob);
+                a.download = `${fileName}.html`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                
+                alert(`✅ Đã đóng gói sản phẩm an toàn!\nFile: "${fileName}.html"\n(Admin đã được ẩn khỏi bản phát hành này)`);
+            },
+            saveToCode() { this.saveFullHTML(); },
+            exportPDF() {
+                let list = [...this.data]; if(this.searchTerm) list=list.filter(q=>q.id.toString().includes(this.searchTerm)); else { if(this.adminFilter.grade) list=list.filter(q=>q.grade===this.adminFilter.grade); if(this.adminFilter.chapter) list=list.filter(q=>q.chapter===this.adminFilter.chapter); if(this.adminFilter.lesson) list=list.filter(q=>q.lesson===this.adminFilter.lesson); }
+                if(list.length===0) return alert("Không có câu hỏi nào để xuất!");
+                
+                const printArea = document.getElementById('print-area');
+                let contentHTML = list.map((q,i) => `<div class="question-item"><strong>Câu ${i+1}</strong> (${q.id}): ${q.content}<div class="options">${q.options&&q.type==='mcq'?q.options.map((o,x)=>`<div>${String.fromCharCode(65+x)}. ${o}</div>`).join(''):''}</div></div>`).join('');
+                printArea.innerHTML = `<div style="font-family:'Times New Roman'; padding: 20px;"><h1 style="text-align: center; margin-bottom: 20px;">DANH SÁCH CÂU HỎI</h1>${contentHTML}</div>`;
+                MathJax.typesetPromise([printArea]).then(() => { window.print(); printArea.innerHTML = ''; });
+            },
+            clearAllData() { if(confirm("XÓA TOÀN BỘ DỮ LIỆU?")) { this.data=[]; localStorage.setItem('g_rescue_v6',JSON.stringify(this.data)); this.renderAdmin(); } },
+            exportJSON() { const blob = new Blob([JSON.stringify(this.data,null,2)], {type: "application/json"}); const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `Data_${Date.now()}.json`; a.click(); },
+            importJSONFile() { 
+                if (!this.sel.g || !this.sel.c || !this.sel.l) return alert("⚠️ Vui lòng chọn Khối, Chương và Bài học trước!");
+                const f = document.getElementById('json-input').files[0]; 
+                if(!f) return; 
+                const r = new FileReader(); 
+                r.onload = (e) => { 
+                    try { const d = JSON.parse(e.target.result); if(Array.isArray(d)) { d.forEach(q => { q.grade = this.sel.g; q.chapter = this.sel.c; q.lesson = this.sel.l; const i = this.data.findIndex(x => x.id == q.id); if(i !== -1) this.data[i] = q; else this.data.push(q); }); localStorage.setItem('g_rescue_v6',JSON.stringify(this.data)); this.renderAdmin(); alert(`Đã nhập thành công!`); } } catch(err) { alert("Lỗi file!"); } 
+                }; r.readAsText(f); 
+            },
+            
+            // --- WORD IMPORT ---
+            detectAnswerInText(text) { if (!text) return 'A'; const match = text.match(/(?:chọn|đáp án|phương án|kết quả|vậy)\s*([A-D])/i); return match ? match[1].toUpperCase() : 'A'; },
+            extractTFAnswer(text) { let ans = ['0', '0', '0', '0']; const lowerText = text.toLowerCase(); const compactMatches = [...lowerText.matchAll(/([a-d])\s*[-–=:]\s*(đúng|sai)/g)]; if (compactMatches.length > 0) { compactMatches.forEach(m => { const idx = m[1].charCodeAt(0) - 97; if (idx >= 0 && idx < 4) { ans[idx] = (m[2] === 'sai') ? '1' : '0'; } }); } return ans.join('|'); },
+            extractShortAnswer(text) { if (!text) return ''; const match = text.match(/(?:đáp án|đáp số|kết quả|giá trị|đáp số:)\s*[:\.]?\s*([-]?\d+([.,]\d+)?)/i); if (match) return match[1]; return ''; },
+            async handleWordUpload(event) { const file = event.target.files[0]; if (!file) return; const statusEl = document.getElementById('word-status'); if (statusEl) statusEl.innerText = "Đang đọc tệp..."; const reader = new FileReader(); reader.onload = async (e) => { try { const result = await mammoth.convertToHtml({ arrayBuffer: e.target.result }); this.parseWordHtml(result.value); } catch (err) { alert("Lỗi đọc file Word!"); } }; reader.readAsArrayBuffer(file); },
+            parseWordHtml(html) { 
+                const statusEl = document.getElementById('word-status'); if (statusEl) statusEl.innerText = "Đang xử lý..."; 
+                const parser = new DOMParser(); const docObj = parser.parseFromString(html, 'text/html'); 
+                const paragraphs = docObj.querySelectorAll('p, h1, h2, h3, table'); 
+                let drafts = []; let currentQ = null; let currentField = 'content'; 
+                const forceType = document.getElementById('word-type').value;
+                
+                const flushQ = () => {
+                    if (currentQ) {
+                        if(currentQ.type === 'mcq' && !currentQ.correct) currentQ.correct = this.detectAnswerInText(currentQ.solution);
+                        if(currentQ.type === 'short' && !currentQ.correct) currentQ.correct = this.extractShortAnswer(currentQ.solution);
+                        if(currentQ.type === 'tf' && !currentQ.correct) currentQ.correct = this.extractTFAnswer(currentQ.solution + " " + currentQ.content); 
+                        drafts.push(currentQ);
+                    }
+                };
+
+                paragraphs.forEach(node => { 
+                    let text = node.innerText.trim(); let innerHtml = node.innerHTML; 
+                    const qMatch = text.match(/^(Câu|Bài)\s*(\d+)[:\.]/i);
+                    const theoryMatch = text.match(/^CƠ SỞ LÝ THUYẾT/i);
+                    const stepsMatch = text.match(/^HƯỚNG DẪN GIẢI \(CÁC BƯỚC\)/i);
+                    const solMatch = text.match(/^LỜI GIẢI CHI TIẾT/i);
+                    const ansMatch = text.match(/^ĐÁP ÁN ĐÚNG/i);
+
+                    if (qMatch) { 
+                        flushQ();
+                        let initialType = forceType === 'auto' ? 'short' : forceType; 
+                        currentQ = { content: innerHtml.replace(/^(Câu|Bài)\s*(\d+)[:\.]/i, '').trim(), options: [], correct: '', theory: '', steps: [], solution: '', type: initialType }; 
+                        currentField = 'content'; 
+                    } 
+                    else if (ansMatch && currentQ) { currentField = 'correct'; }
+                    else if (theoryMatch && currentQ) { currentField = 'theory'; }
+                    else if (stepsMatch && currentQ) { currentField = 'steps'; }
+                    else if (solMatch && currentQ) { currentField = 'solution'; }
+                    else if (currentQ) { 
+                        if (currentField === 'content') {
+                            if (forceType !== 'short' && text.match(/^[A-D]\./)) {
+                                currentQ.content += "<br>" + innerHtml; 
+                            } else {
+                                currentQ.content += "<br>" + innerHtml;
+                            }
+                        }
+                        else if (currentField === 'correct') currentQ.correct = text; 
+                        else if (currentField === 'theory') currentQ.theory += (currentQ.theory ? "\n" : "") + text;
+                        else if (currentField === 'steps') currentQ.steps.push(text);
+                        else if (currentField === 'solution') currentQ.solution += (currentQ.solution ? "<br>" : "") + innerHtml;
+                    } 
+                });
+                flushQ();
+                this.wordDrafts = drafts; if (statusEl) statusEl.innerText = `Tìm thấy ${drafts.length} câu.`; this.renderWordPreview();
+            },
+            renderWordPreview() { const container = document.getElementById('word-preview'); const btnSave = document.getElementById('btn-save-word'); if (!container) return; container.classList.remove('hidden'); btnSave.classList.remove('hidden'); container.innerHTML = this.wordDrafts.map((q, idx) => `<div class="border p-3 rounded bg-white text-sm word-content"><div class="font-bold mb-1 flex justify-between"><span>Câu ${idx + 1}: ${q.type.toUpperCase()}</span><span class="text-blue-600 font-normal ml-2">Đ/A: ${q.correct}</span></div><div class="mb-2 p-2 bg-slate-50 border rounded">${q.content}</div></div>`).join(''); },
+            saveWordDrafts() {
+                const g = this.sel.g; const c = this.sel.c; const l = this.sel.l; const lvl = parseInt(document.getElementById('word-lvl').value); const selectedVariant = parseInt(document.getElementById('word-var').value);
+                if (!g || !c || !l) return alert("Chưa chọn bài học (Khối/Chương/Bài)!");
+                if (confirm(`Lưu ${this.wordDrafts.length} câu?`)) { let count = 0;
+                    this.wordDrafts.forEach((d, index) => { const currentType = d.type || 'mcq'; const curPrefix = this.generateBasePrefix(g, c, l, currentType, lvl); let finalId = "";
+                        if (selectedVariant === 0) { const nextIdx = this.getNextIndex(curPrefix) + 1; finalId = `${curPrefix}_${String(nextIdx).padStart(2, '0')}`; } 
+                        else { 
+                            let existingOriginals = this.data.filter(q => q.id.toString().startsWith(curPrefix) && q.variant === 0);
+                            if (index < existingOriginals.length) { finalId = `${existingOriginals[index].id}_V${selectedVariant}`; } 
+                            else { const nextIdx = this.getNextIndex(curPrefix) + 1; finalId = `${curPrefix}_${String(nextIdx).padStart(2, '0')}_V${selectedVariant}`; } 
+                        }
+                        if(currentType === 'mcq' && (!d.options || d.options.length < 4)) d.options = ['A','B','C','D'];
+                        this.data.push({ id: finalId, grade: g, chapter: c, lesson: l, level: lvl, type: currentType, variant: selectedVariant, content: d.content, options: d.options, correct: d.correct, theory: d.theory, steps: d.steps, solution: d.solution }); count++;
+                    });
+                    localStorage.setItem('g_rescue_v6', JSON.stringify(this.data)); this.wordDrafts = []; document.getElementById('word-preview').classList.add('hidden'); document.getElementById('btn-save-word').classList.add('hidden'); this.renderAdmin(); alert(`Đã lưu ${count} câu.`);
+                }
+            },
+            
+            // --- HELPERS ---
+            goLanding() { 
+                this.currentUser = null;
+                document.getElementById('app-container').innerHTML = `
+                    <div class="max-w-5xl mx-auto py-12 fade-in">
+                        <div class="text-center mb-10"><h2 class="text-4xl font-bold text-slate-800 mb-2 tracking-tight">Chào mừng đến với G-RESCUE</h2><p class="text-slate-500">Hệ thống gia sư AI thông minh & Quản lý ngân hàng đề</p></div>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+                            <!-- Học Sinh -->
+                            <div onclick="app.login('student')" class="role-card bg-white p-8 rounded-2xl shadow-lg border border-blue-50 cursor-pointer text-center group"><div class="w-20 h-20 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:bg-blue-600 transition"><i class="fa-solid fa-user-graduate text-3xl text-blue-600 group-hover:text-white"></i></div><h3 class="text-xl font-bold text-slate-800">Học sinh</h3><p class="text-sm text-slate-500 mt-2">Luyện đề, tra cứu, học sâu với AI Mentor.</p></div>
+                            
+                            <!-- Giáo Viên (Mới) -->
+                            <div onclick="app.login('teacher')" class="role-card bg-white p-8 rounded-2xl shadow-lg border border-amber-50 cursor-pointer text-center group"><div class="w-20 h-20 bg-amber-100 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:bg-amber-600 transition"><i class="fa-solid fa-chalkboard-user text-3xl text-amber-600 group-hover:text-white"></i></div><h3 class="text-xl font-bold text-slate-800">Giáo viên</h3><p class="text-sm text-slate-500 mt-2">Quản lý Ngân hàng câu hỏi & Cấu trúc.</p></div>
+
+                            <!-- Admin (Tách riêng) -->
+                            <div onclick="app.login('admin')" class="role-card bg-white p-8 rounded-2xl shadow-lg border border-red-50 cursor-pointer text-center group"><div class="w-20 h-20 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:bg-red-600 transition"><i class="fa-solid fa-user-shield text-3xl text-red-600 group-hover:text-white"></i></div><h3 class="text-xl font-bold text-slate-800">Quản trị viên</h3><p class="text-sm text-slate-500 mt-2">Quản lý toàn hệ thống, Users & Tín dụng.</p></div>
+                        </div>
+                    </div>`;
+            }
+        };
+        app.init();
+    </script>
+</body>
+</html>
