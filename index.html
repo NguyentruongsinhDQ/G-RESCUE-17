@@ -16,6 +16,12 @@
     <script crossorigin="anonymous" src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js" crossorigin="anonymous"></script>
 
+    <!-- BƯỚC 1: Thêm thư viện hiệu ứng & hướng dẫn -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/driver.js@1.0.1/dist/driver.css"/>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
+    <script src="https://cdn.jsdelivr.net/npm/driver.js@1.0.1/dist/driver.js.iife.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
     <script>
         MathJax = {
             tex: { inlineMath: [['$', '$'], ['\\(', '\\)']] },
@@ -33,6 +39,52 @@
         :root { --bg-primary: #f8fafc; --text-primary: #1e293b; }
         body { font-family: 'Be Vietnam Pro', sans-serif; background-color: var(--bg-primary); color: var(--text-primary); transition: background-color 0.5s ease, color 0.3s ease; overflow-x: hidden; }
         
+        /* 1. Giao diện Glassmorphism (Kính mờ - Chuẩn Gen Z) */
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.1);
+        }
+
+        /* 2. Gradient Background Động */
+        body.student-mode {
+            background: linear-gradient(-45deg, #ee7752, #e73c7e, #23a6d5, #23d5ab);
+            background-size: 400% 400%;
+            animation: gradientBG 15s ease infinite;
+        }
+        body.student-mode .bg-white {
+            background-color: rgba(255, 255, 255, 0.9) !important;
+            backdrop-filter: blur(10px);
+        }
+
+        @keyframes gradientBG {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        /* 3. Toast Message (Thông báo lời khen) */
+        .feedback-toast {
+            position: fixed;
+            top: 80px;
+            right: 20px;
+            z-index: 9999;
+            max-width: 350px;
+            animation: slideInRight 0.5s, fadeOut 0.5s 4.5s forwards;
+            border-radius: 12px;
+            padding: 16px;
+            box-shadow: 0 10px 25px -5px rgba(0,0,0,0.1);
+        }
+        @keyframes slideInRight {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        @keyframes fadeOut {
+            to { opacity: 0; visibility: hidden; }
+        }
+
         /* Dark Mode */
         body.dark-mode { background-color: #0f172a; color: #f1f5f9; }
         body.dark-mode .bg-white { background-color: #1e293b !important; color: #f1f5f9; border-color: #334155; }
@@ -76,7 +128,7 @@
             #print-area, #print-area * { visibility: visible; } 
             #print-area { position: absolute; left: 0; top: 0; width: 100%; background: white; padding: 20px; z-index: 99999; } 
             .question-item { page-break-inside: avoid; margin-bottom: 20px; border-bottom: 1px dashed #ccc; padding-bottom: 10px; }
-            .falling-container, #summer-tree, header, .modal { display: none !important; } 
+            .falling-container, #summer-tree, header, .modal, .feedback-toast { display: none !important; } 
         }
         
         #react-hidden-render { position: absolute; top: -9999px; left: -9999px; opacity: 0; pointer-events: none; }
@@ -98,6 +150,8 @@
 <body class="text-slate-800 font-sans min-h-screen flex flex-col relative">
 
     <div id="falling-container" class="falling-container"></div>
+    <!-- Feedback Toast Container -->
+    <div id="toast-container"></div>
     <div id="summer-tree"><svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg"><path d="M90 200 L90 120 L80 100 L95 120 L95 200 Z" fill="#8B4513"/><rect x="90" y="120" width="15" height="80" fill="#8B4513"/><circle cx="60" cy="90" r="30" fill="#22c55e" opacity="0.9"/><circle cx="140" cy="100" r="35" fill="#22c55e" opacity="0.9"/><circle cx="100" cy="60" r="40" fill="#22c55e"/><circle cx="70" cy="80" r="5" fill="#ef4444"/><circle cx="110" cy="50" r="5" fill="#ef4444"/><circle cx="130" cy="90" r="5" fill="#ef4444"/><circle cx="90" cy="70" r="5" fill="#ef4444"/><circle cx="50" cy="100" r="5" fill="#ef4444"/></svg></div>
 
     <header class="bg-white shadow-sm sticky top-0 z-50 border-b border-slate-200 transition-colors duration-300">
@@ -158,6 +212,66 @@
     </script>
 
     <script>
+        // --- BƯỚC 2: LOGIC LỜI KHEN & HELPER ---
+        const FEEDBACK_DATA = {
+            CORRECT: {
+                1: ["Khởi động tốt! 🔥", "Easy game! Tiếp tục nhé.", "Chuẩn không cần chỉnh!"],
+                2: ["Tư duy sắc bén! 🧠", "Bạn đã nắm chắc kiến thức rồi.", "Logic tuyệt vời!"],
+                3: ["Đẳng cấp Master! 🏆", "Bài này khó thế mà cũng 'xơi' gọn!", "Tuyệt đỉnh Kungfu Toán học!"]
+            },
+            WRONG: {
+                1: ["Bình tĩnh nào, đọc kỹ đề xíu thôi! 🥺", "Sai một ly đi một dặm, thử lại nhé!"],
+                2: ["Gần đúng rồi, coi chừng bị lừa đấy! 🚧", "Kiểm tra lại tính toán xem sao?"],
+                3: ["Bài này 'khoai' thật. Đừng nản, xem gợi ý đi! 🤖", "Thất bại là mẹ thành công!"]
+            },
+            RANK: {
+                LOW: "Cố lên, hành trình vạn dặm bắt đầu từ bước chân đầu tiên! 🌱",
+                MID: "Phong độ đang lên rất cao! Giữ vững nhé! 🚀",
+                HIGH: "Bạn đang ở top server rồi! Quá đỉnh! 👑"
+            }
+        };
+
+        const getMotivation = (isCorrect, bloomLevel, totalScore) => {
+            const type = isCorrect ? 'CORRECT' : 'WRONG';
+            const level = [1, 2, 3].includes(bloomLevel) ? bloomLevel : 1; 
+            const messages = FEEDBACK_DATA[type][level];
+            let msg = messages[Math.floor(Math.random() * messages.length)];
+            
+            if (isCorrect) {
+                if (totalScore < 50 && Math.random() > 0.7) msg += " " + FEEDBACK_DATA.RANK.LOW;
+                else if (totalScore >= 50 && totalScore <= 80 && Math.random() > 0.7) msg += " " + FEEDBACK_DATA.RANK.MID;
+                else if (totalScore > 80) msg += " " + FEEDBACK_DATA.RANK.HIGH;
+            }
+            return msg;
+        };
+
+        const runDriverTour = (stepName) => {
+            if(!window.driver) return;
+            const driver = window.driver.js.driver;
+            
+            const tours = {
+                'login': [
+                    { element: '#login-screen', popover: { title: '👋 Chào mừng đến G-RESCUE', description: 'Cổng thông tin luyện thi Toán 12 hiện đại nhất.' } },
+                    { element: '#role-student', popover: { title: '👨‍🎓 Học sinh', description: 'Vào đây để luyện đề và tích lũy Credit.' } },
+                    { element: '#role-teacher', popover: { title: '👩‍🏫 Giáo viên', description: 'Khu vực quản lý dành cho thầy cô.' } }
+                ],
+                'student_dashboard': [
+                    { element: '#program-tree', popover: { title: '📚 Chương Trình Học', description: 'Chọn chương và bài học tại cây thư mục này để bắt đầu.' } },
+                    { element: '#student-main', popover: { title: '⚔️ Khu Vực Chính', description: 'Nơi hiển thị bài thi, lý thuyết và kết quả.' } },
+                    { element: '#wallet-area', popover: { title: '💰 Ví Credit', description: 'Mỗi lần học sẽ tốn phí. Hãy chăm chỉ điểm danh để nhận thêm Credit!' } }
+                ]
+            };
+
+            if (tours[stepName]) {
+                const driverObj = driver({
+                    showProgress: true,
+                    animate: true,
+                    steps: tours[stepName]
+                });
+                driverObj.drive();
+            }
+        };
+
         const INITIAL_DATA = [
             // MCQ Example
             {
@@ -233,21 +347,21 @@
         
         const INITIAL_TREE = { "Khối 10": {}, "Khối 11": {}, "Khối 12": { "Chương I: Ứng dụng đạo hàm để khảo sát và vẽ đồ thị hàm số": [ "Bài 1. Tính đơn điệu và cực trị của hàm số", "Bài 2. Giá trị lớn nhất và giá trị nhỏ nhất của hàm số", "Bài 3. Đường tiệm cận của đồ thị hàm số", "Bài 4. Khảo sát sự biến thiên và vẽ đồ thị hàm số", "Bài 5. Ứng dụng đạo hàm để giải quyết một số vấn đề liên quan đến thực tiễn" ], "Chương II: Véctơ và hệ trục toạ độ trong không gian": [], "Chương III: Các số đặc trưng đo mức độ phân tán của mẫu số liệu ghép nhóm": [], "Chương IV: Nguyên hàm và tích phân": [], "Chương V: Phương pháp toạ độ trong không gian": [], "Chương VI: Xác suất có điều kiện": [] } };
         
-        // Admin credit mặc định vô cùng - Version bumped to force reload
+        // Admin credit mặc định vô cùng
         const INITIAL_USERS = [
             { u: "admin", p: "123", role: "admin", credit: 999999, status: "active", class: "System", lastLogin: "" },
             { u: "giaovien", p: "123", role: "teacher", credit: 2000, status: "active", class: "GV Toán", lastLogin: "" },
             { u: "hs1", p: "123", role: "student", credit: 10, status: "active", manager: "giaovien", class: "12A1", lastLogin: "" },
             { u: "hs2", p: "123", role: "student", credit: 50, status: "active", manager: "giaovien", class: "12A2", lastLogin: "" },
-            { u: "hocsinh", p: "123", role: "student", credit: 100, status: "active", manager: "giaovien", class: "12A1", lastLogin: "" } // Added friendly username
+            { u: "hocsinh", p: "123", role: "student", credit: 100, status: "active", manager: "giaovien", class: "12A1", lastLogin: "" } 
         ];
 
-        const DATA_VERSION = 6; 
+        const DATA_VERSION = 8; 
 
         const app = {
             data: [], tree: {}, users: [], currentUser: null,
             phase: 0, quiz: [], answers: {}, reviewQueue: [], reviewIndex: 0,
-            rescueStep: 0, // 0:Content, 1:Theory, 2:Steps, 3:Solution, 4:Variants
+            rescueStep: 0, 
             pendingVariantId: null, isDarkMode: false, season: 'spring',
             adminMode: 'manual', adminTab: 'question', 
             sel: { g: '', c: '', l: '' }, structSel: { g: '' }, searchTerm: '',
@@ -262,7 +376,7 @@
                 if (fileVer > localVer) {
                     this.data = INITIAL_DATA;
                     this.tree = INITIAL_TREE;
-                    this.users = JSON.parse(JSON.stringify(INITIAL_USERS));
+                    this.users = JSON.parse(JSON.stringify(INITIAL_USERS)); 
                     localStorage.setItem('g_rescue_v6', JSON.stringify(this.data));
                     localStorage.setItem('g_rescue_tree_v1', JSON.stringify(this.tree));
                     localStorage.setItem('g_rescue_users_v1', JSON.stringify(this.users));
@@ -276,7 +390,6 @@
                     this.users = storedUsers ? JSON.parse(storedUsers) : JSON.parse(JSON.stringify(INITIAL_USERS));
                 }
                 
-                // Ensure admin credit is effectively infinite
                 const admin = this.users.find(u => u.role === 'admin');
                 if(admin) admin.credit = 999999;
 
@@ -288,6 +401,24 @@
                 this.goLanding();
             },
 
+            // --- HELPER: SHOW TOAST ---
+            showFeedbackToast(msg, type) {
+                const container = document.getElementById('toast-container');
+                const toast = document.createElement('div');
+                toast.className = `feedback-toast glass-panel border-l-4 ${type === 'success' ? 'border-green-500 text-green-800' : 'border-red-500 text-red-800'}`;
+                toast.innerHTML = `
+                    <div class="flex items-center">
+                        <i class="fa-solid ${type === 'success' ? 'fa-circle-check' : 'fa-circle-exclamation'} text-2xl mr-3"></i>
+                        <div>
+                            <h4 class="font-bold">${type === 'success' ? 'Chính xác!' : 'Tiếc quá!'}</h4>
+                            <p class="text-sm">${msg}</p>
+                        </div>
+                    </div>
+                `;
+                container.appendChild(toast);
+                setTimeout(() => toast.remove(), 5000); // Tự động xoá sau 5s
+            },
+
             // --- USER & CREDIT LOGIC ---
             saveUsers() { localStorage.setItem('g_rescue_users_v1', JSON.stringify(this.users)); },
             checkDailyCredit(user) {
@@ -295,7 +426,7 @@
                 if (user.lastLogin !== today) {
                     let bonus = 0;
                     if (user.role === 'teacher') bonus = 100;
-                    if (user.role === 'student') bonus = 2; 
+                    if (user.role === 'student') bonus = 2;
                     if (bonus > 0) {
                         user.credit += bonus;
                         alert(`📅 ĐIỂM DANH: Xin chào ${user.u}!\nBạn được cộng +${bonus} Credit hôm nay.`);
@@ -359,12 +490,12 @@
                 if (roleInput === 'admin') { theme = 'red'; title = 'Quản trị viên'; }
                 document.getElementById('app-container').innerHTML = `
                     <div class="max-w-md mx-auto fade-in mt-10">
-                        <div class="bg-white p-8 rounded-2xl shadow-xl border border-slate-100">
+                        <div class="glass-panel p-8 rounded-2xl shadow-xl">
                             <h2 class="text-2xl font-bold text-center text-slate-800 mb-6">Đăng nhập ${title}</h2>
                             <div class="space-y-4">
-                                <input type="text" id="u" class="w-full border p-3 rounded-lg focus:ring-2 focus:ring-${theme}-500 outline-none" placeholder="Tên đăng nhập" onkeypress="if(event.key==='Enter') document.getElementById('p').focus()">
-                                <input type="password" id="p" class="w-full border p-3 rounded-lg focus:ring-2 focus:ring-${theme}-500 outline-none" placeholder="Mật khẩu" onkeypress="if(event.key==='Enter') app.auth('${roleInput}')">
-                                <button onclick="app.auth('${roleInput}')" class="w-full bg-${theme}-600 text-white py-3 rounded-lg font-bold hover:bg-${theme}-700 transition">Vào hệ thống</button>
+                                <input type="text" id="u" class="w-full border p-3 rounded-lg focus:ring-2 focus:ring-${theme}-500 outline-none bg-white/50" placeholder="Tên đăng nhập" onkeypress="if(event.key==='Enter') document.getElementById('p').focus()">
+                                <input type="password" id="p" class="w-full border p-3 rounded-lg focus:ring-2 focus:ring-${theme}-500 outline-none bg-white/50" placeholder="Mật khẩu" onkeypress="if(event.key==='Enter') app.auth('${roleInput}')">
+                                <button onclick="app.auth('${roleInput}')" class="w-full bg-${theme}-600 text-white py-3 rounded-lg font-bold hover:bg-${theme}-700 transition shadow-lg">Vào hệ thống</button>
                                 <button onclick="app.goLanding()" class="w-full text-slate-500 text-sm mt-2 hover:underline">Quay lại</button>
                             </div>
                             <p class="text-xs text-center text-slate-400 mt-4">Quên mật khẩu? Liên hệ Admin: <a href="tel:0969205204" class="text-blue-500 hover:underline font-bold">0969.205.204</a></p>
@@ -386,36 +517,55 @@
                     else this.renderStudent();
                 } else alert("Sai tên đăng nhập hoặc mật khẩu! (Thử: admin/123, giaovien/123, hs1/123, hocsinh/123)");
             },
-            logout() { this.currentUser = null; this.goLanding(); },
+            logout() { 
+                this.currentUser = null; 
+                document.body.classList.remove('student-mode'); // Tắt chế độ màu mè
+                this.goLanding(); 
+            },
 
-            // --- STUDENT VIEW ---
+            // --- STUDENT VIEW (ADDED BACK) ---
             renderStudent() {
-                const creditDisplay = `<div class="mb-4 bg-indigo-50 px-4 py-3 rounded-xl text-indigo-700 font-bold shadow-sm border border-indigo-100 flex items-center justify-between"><div class="flex items-center gap-2"><i class="fa-solid fa-wallet text-xl"></i> <span class="text-xs uppercase tracking-wider">Tín dụng</span></div><span id="header-credit" class="text-2xl">${this.currentUser.credit}</span></div>`;
+                // Kích hoạt chế độ Student (Màu mè Gen Z)
+                document.body.classList.add('student-mode');
+
+                const creditDisplay = `<div id="wallet-area" class="mb-4 bg-indigo-50 px-4 py-3 rounded-xl text-indigo-700 font-bold shadow-sm border border-indigo-100 flex items-center justify-between"><div class="flex items-center gap-2"><i class="fa-solid fa-wallet text-xl"></i> <span class="text-xs uppercase tracking-wider">Tín dụng</span></div><span id="header-credit" class="text-2xl">${this.currentUser.credit}</span></div>`;
                 const isTeacher = this.currentUser && this.currentUser.role === 'teacher';
                 const backBtn = isTeacher ? `<button onclick="app.switchToTeacherView()" class="fixed bottom-4 left-4 bg-amber-600 text-white px-4 py-2 rounded-full shadow-lg font-bold hover:bg-amber-700 z-50 animate-pulse"><i class="fa-solid fa-arrow-left"></i> Về Sảnh Giáo Viên</button>` : '';
 
                 document.getElementById('app-container').innerHTML = `
                     ${backBtn}
                     <div class="grid grid-cols-12 gap-6 w-full max-w-7xl mx-auto fade-in relative">
-                        <div class="col-span-3 bg-white p-4 rounded-xl shadow h-fit border border-slate-100">
+                        <div class="col-span-3 glass-panel p-4 h-fit">
                             ${creditDisplay}
                             <h3 class="font-bold text-slate-500 mb-4 border-b pb-2">CHƯƠNG TRÌNH HỌC</h3>
-                            ${this.renderStudentTree()}
+                            <div id="program-tree">${this.renderStudentTree()}</div>
                         </div>
-                        <div id="student-main" class="col-span-9 bg-white p-8 rounded-xl shadow border border-slate-100 min-h-[500px] flex items-center justify-center text-center">
+                        <div id="student-main" class="col-span-9 glass-panel p-8 min-h-[500px] flex items-center justify-center text-center">
                             <div class="text-center max-w-lg mx-auto">
                                 <img src="https://cdn-icons-png.flaticon.com/512/3750/3750019.png" class="w-32 mx-auto mb-6 opacity-90 hover:scale-110 transition duration-500">
                                 <h2 class="text-3xl font-bold text-slate-800 mb-2">Sẵn sàng 'Out Trình' chưa? 😎</h2>
                                 <p class="text-slate-500">Chọn bài học bên trái để bắt đầu ngay.</p>
                             </div>
                         </div>
-                    </div>`;
+                    </div>
+                    <!-- Help Button -->
+                    <button 
+                        onClick="app.callHelp()"
+                        class="fixed bottom-4 right-4 w-12 h-12 bg-blue-600 text-white rounded-full shadow-lg hover:bg-blue-700 transition animate-bounce z-50 flex items-center justify-center"
+                        title="Hướng dẫn sử dụng"
+                    >
+                        <i class="fa-solid fa-question text-xl"></i>
+                    </button>
+                    `;
             },
-            switchToTeacherView() { this.renderAdmin(); },
+            callHelp() {
+                runDriverTour('student_dashboard');
+            },
+            switchToTeacherView() { document.body.classList.remove('student-mode'); this.renderAdmin(); },
             renderStudentTree() {
                 let html = '';
                 for(const g in this.tree) {
-                    html += `<details open class="group mb-2"><summary class="font-bold text-slate-700 p-2 hover:bg-slate-50 rounded cursor-pointer">${g}</summary><div class="pl-4 border-l ml-2">`;
+                    html += `<details open class="group mb-2"><summary class="font-bold text-slate-700 p-2 hover:bg-white/50 rounded cursor-pointer">${g}</summary><div class="pl-4 border-l ml-2">`;
                     for(const c in this.tree[g]) {
                         html += `<details open class="mt-1"><summary class="text-sm font-semibold text-slate-600 p-1 hover:text-blue-600 cursor-pointer">${c}</summary><div class="pl-3 mt-1 space-y-1">`;
                         this.tree[g][c].forEach(l => html += `<div onclick="app.startFlow('${g}','${c}','${l}')" class="text-xs text-slate-500 p-2 rounded hover:bg-blue-50 hover:text-blue-700 cursor-pointer flex items-center"><i class="fa-solid fa-circle-play mr-2 text-[8px]"></i> ${l}</div>`);
@@ -426,7 +576,7 @@
                 return html;
             },
 
-            // --- GAME FLOW (Phase 1, 2, 3) ---
+            // --- GAME FLOW (Phase 1, 2, 3) (RESTORED) ---
             startFlow(g,c,l) {
                 if (!this.deductCredit(1, "Làm bài tập")) return;
 
@@ -461,12 +611,12 @@
 
             async renderPhase1() {
                 const main = document.getElementById('student-main');
-                main.className = "col-span-9 bg-white p-8 rounded-xl shadow border-t-4 border-red-500";
+                main.className = "col-span-9 glass-panel p-8 border-t-4 border-red-500";
                 let html = `<div class="w-full"><div class="flex justify-between items-center mb-6"><h2 class="text-xl font-bold text-red-600">🔴 GIAI ĐOẠN 1: TIẾP NHẬN</h2><div class="flex gap-2"><span class="bg-red-100 text-red-600 px-3 py-1 rounded text-xs font-bold">${this.quiz.length} Câu</span><button onclick="app.renderStudent()" class="text-slate-400 hover:text-red-500 text-sm px-2">Thoát</button></div></div>`;
                 for (let i=0; i<this.quiz.length; i++) {
                     const q = this.quiz[i];
                     const contentHtml = await this.renderContent(q.content);
-                    html += `<div class="mb-6 p-4 border border-slate-100 rounded-lg"><div class="font-bold text-slate-700 mb-2">Câu ${i+1}:</div><div class="mb-3 text-slate-800">${contentHtml}</div>`;
+                    html += `<div class="mb-6 p-4 border border-slate-100 rounded-lg bg-white/50"><div class="font-bold text-slate-700 mb-2">Câu ${i+1}:</div><div class="mb-3 text-slate-800">${contentHtml}</div>`;
                     if (q.type === 'mcq') html += `<div class="grid grid-cols-2 gap-3">` + q.options.map((o, idx) => `<label class="flex items-center p-3 border rounded cursor-pointer hover:bg-slate-50"><input type="radio" name="q${q.id}" value="${idx}" class="mr-3" onchange="app.answers[${q.id}]='${idx}'"> ${o}</label>`).join('') + `</div>`;
                     else if (q.type === 'tf') html += `<div class="grid grid-cols-1 gap-2">` + q.options.map((o, idx) => `<div class="flex items-center justify-between p-2 border rounded bg-slate-50"><span class="text-sm flex-1 mr-4">${o}</span><div class="flex gap-2"><label class="flex items-center text-xs"><input type="radio" name="q${q.id}_${idx}" value="0" onchange="app.setTFAnswer('${q.id}', ${idx}, '0')"> Đ</label><label class="flex items-center text-xs"><input type="radio" name="q${q.id}_${idx}" value="1" onchange="app.setTFAnswer('${q.id}', ${idx}, '1')"> S</label></div></div>`).join('') + `</div>`;
                     else html += `<div class="flex gap-2 justify-start"><input type="text" maxlength="1" class="w-10 h-10 border-2 border-slate-300 rounded text-center text-lg font-bold focus:border-blue-500 focus:outline-none uppercase" onkeyup="app.setShortAnswer('${q.id}', 0, this)"><input type="text" maxlength="1" class="w-10 h-10 border-2 border-slate-300 rounded text-center text-lg font-bold focus:border-blue-500 focus:outline-none uppercase" onkeyup="app.setShortAnswer('${q.id}', 1, this)"><input type="text" maxlength="1" class="w-10 h-10 border-2 border-slate-300 rounded text-center text-lg font-bold focus:border-blue-500 focus:outline-none uppercase" onkeyup="app.setShortAnswer('${q.id}', 2, this)"><input type="text" maxlength="1" class="w-10 h-10 border-2 border-slate-300 rounded text-center text-lg font-bold focus:border-blue-500 focus:outline-none uppercase" onkeyup="app.setShortAnswer('${q.id}', 3, this)"></div>`;
@@ -487,6 +637,11 @@
                     else { const u = (this.answers[q.id]||[]).join('').trim(); const c = (q.correct||"NO_DATA").toString().trim().toUpperCase(); if(u===c || parseFloat(u.replace(',','.'))===parseFloat(c.replace(',','.'))) isCorrect=true; }
                     if(isCorrect) score++; else this.reviewQueue.push(q);
                 });
+
+                if (score === this.quiz.length) {
+                    confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 } });
+                }
+
                 const main = document.getElementById('student-main');
                 main.innerHTML = `<div class="text-center py-10 w-full fade-in"><h2 class="text-3xl font-bold text-slate-800">Điểm số: <span class="text-red-600">${score}/${this.quiz.length}</span></h2><p class="mt-4 text-slate-600">${score===this.quiz.length?'Xuất sắc!':'Bạn cần ôn tập lại ' + this.reviewQueue.length + ' câu sai.'}</p><button onclick="app.startPhase2()" class="mt-6 bg-amber-500 text-white px-8 py-3 rounded-full font-bold shadow-lg">🚀 Vào Trạm Cứu Hộ</button></div>`;
             },
@@ -494,20 +649,20 @@
             
             async renderRescueItem() {
                 const q = this.reviewQueue[this.reviewIndex];
-                const main = document.getElementById('student-main'); main.className = "col-span-9 bg-white p-0 rounded-xl shadow border-t-4 border-amber-500 overflow-hidden";
+                const main = document.getElementById('student-main'); main.className = "col-span-9 glass-panel p-0 rounded-xl border-t-4 border-amber-500 overflow-hidden";
                 const qContentHtml = await this.renderContent(q.content);
                 
                 // Cumulative Content Logic
                 let contentHTML = `<div class="mb-6"><h3 class="text-lg font-bold text-slate-800 mb-2">2.1 NỘI DUNG CÂU HỎI</h3><div class="text-lg text-slate-800">${qContentHtml}</div></div>`;
                 
                 if (this.rescueStep >= 1) {
-                    contentHTML += `<div class="mb-6 animate-fade-in"><h3 class="text-lg font-bold text-blue-700 mb-2">2.2 CƠ SỞ LÝ THUYẾT</h3><div class="bg-blue-50 p-4 rounded border border-blue-100 whitespace-pre-wrap">${q.theory || 'Đang cập nhật...'}</div></div>`;
+                    contentHTML += `<div class="mb-6 animate-fade-in"><h3 class="text-lg font-bold text-blue-700 mb-2">2.2 CƠ SỞ LÝ THUYẾT</h3><div class="bg-blue-50/80 p-4 rounded border border-blue-100 whitespace-pre-wrap">${q.theory || 'Đang cập nhật...'}</div></div>`;
                 }
                 if (this.rescueStep >= 2) {
-                    contentHTML += `<div class="mb-6 animate-fade-in"><h3 class="text-lg font-bold text-yellow-700 mb-2">2.3 HƯỚNG DẪN GIẢI</h3><div class="bg-yellow-50 p-4 rounded border border-yellow-100"><ul class="list-disc pl-5">${(q.steps||[]).map(s=>`<li>${s}</li>`).join('')}</ul></div></div>`;
+                    contentHTML += `<div class="mb-6 animate-fade-in"><h3 class="text-lg font-bold text-yellow-700 mb-2">2.3 HƯỚNG DẪN GIẢI</h3><div class="bg-yellow-50/80 p-4 rounded border border-yellow-100"><ul class="list-disc pl-5">${(q.steps||[]).map(s=>`<li>${s}</li>`).join('')}</ul></div></div>`;
                 }
                 if (this.rescueStep >= 3) {
-                    contentHTML += `<div class="mb-6 animate-fade-in"><h3 class="text-lg font-bold text-indigo-700 mb-2">2.4 LỜI GIẢI CHI TIẾT</h3><div class="bg-indigo-50 p-4 rounded border border-indigo-100 whitespace-pre-wrap text-indigo-900">${q.solution}</div></div>`;
+                    contentHTML += `<div class="mb-6 animate-fade-in"><h3 class="text-lg font-bold text-indigo-700 mb-2">2.4 LỜI GIẢI CHI TIẾT</h3><div class="bg-indigo-50/80 p-4 rounded border border-indigo-100 whitespace-pre-wrap text-indigo-900">${q.solution}</div></div>`;
                 }
                 
                 let actionArea = '';
@@ -542,7 +697,7 @@
                     actionArea = `<button onclick="app.nextRescueStep()" class="bg-blue-600 text-white px-6 py-2 rounded shadow hover:bg-blue-700">Tiếp tục <i class="fa-solid fa-arrow-down ml-1"></i></button>`;
                 }
 
-                main.innerHTML = `<div class="flex flex-col h-[600px]"><div class="bg-amber-50 p-4 border-b border-amber-100 flex justify-between items-center"><h2 class="font-bold text-amber-700">🟡 CỨU HỘ: CÂU ${this.reviewIndex + 1}/${this.reviewQueue.length}</h2></div><div class="flex-grow p-6 overflow-y-auto custom-scrollbar" id="rescue-scroll-area">${contentHTML}</div><div class="p-4 border-t bg-slate-50 flex justify-between"><button onclick="app.renderStudent()" class="text-slate-400">Thoát</button>${actionArea}</div></div>`;
+                main.innerHTML = `<div class="flex flex-col h-[600px]"><div class="bg-amber-50/50 p-4 border-b border-amber-100 flex justify-between items-center"><h2 class="font-bold text-amber-700">🟡 CỨU HỘ: CÂU ${this.reviewIndex + 1}/${this.reviewQueue.length}</h2></div><div class="flex-grow p-6 overflow-y-auto custom-scrollbar" id="rescue-scroll-area">${contentHTML}</div><div class="p-4 border-t bg-slate-50/50 flex justify-between"><button onclick="app.renderStudent()" class="text-slate-400">Thoát</button>${actionArea}</div></div>`;
                 MathJax.typeset();
                 
                 // Auto scroll to bottom
@@ -585,14 +740,74 @@
                     isCorrect = (val===c || parseFloat(val.replace(',','.'))===parseFloat(c.replace(',','.')));
                 }
                 
+                // Cập nhật Logic Lời khen & Confetti
+                const msg = getMotivation(isCorrect, variant.level, 0);
+                this.showFeedbackToast(msg, isCorrect ? 'success' : 'error');
+
                 if (isCorrect) {
-                    feedbackEl.className = "mt-4 p-4 rounded-xl bg-green-50 border-green-200 text-green-800 block";
+                    feedbackEl.className = "mt-4 p-4 rounded-xl bg-green-50 border-green-200 text-green-800 block animate-bounce";
                     feedbackEl.innerHTML = `<div>✅ Chính xác! ${variant.solution || ''}</div>`;
                     if(!this.doneVariants.includes(vId)) this.doneVariants.push(vId);
+                    
+                    // Pháo hoa
+                    confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
+
                 } else {
-                    feedbackEl.className = "mt-4 p-4 rounded-xl bg-red-50 border-red-200 text-red-800 block";
+                    feedbackEl.className = "mt-4 p-4 rounded-xl bg-red-50 border-red-200 text-red-800 block animate-shake";
                     feedbackEl.innerHTML = `<div>❌ Sai rồi. ${variant.solution || ''}</div>`;
                 }
+            },
+
+            // --- PHASE 3: FINAL EXAM ---
+            async startPhase3() {
+                if (this.reviewQueue.length === 0) return this.finishSession(true);
+                const main = document.getElementById('student-main');
+                main.className = "col-span-9 glass-panel p-8 rounded-xl border-t-4 border-green-500";
+                
+                this.phase3Quiz = []; this.answersPhase3 = {};
+                this.reviewQueue.forEach(wrongQ => {
+                    let baseId = wrongQ.id.toString().split('_V')[0];
+                    let potential = this.data.filter(item => item.id.toString().startsWith(baseId+'_V') && item.id !== wrongQ.id && !this.doneVariants.includes(item.id));
+                    // If no unused variants, verify if any variants exist, else reuse wrongQ
+                    if (potential.length === 0) potential = this.data.filter(item => item.id.toString().startsWith(baseId+'_V'));
+                    this.phase3Quiz.push(potential.length > 0 ? potential[Math.floor(Math.random()*potential.length)] : wrongQ);
+                });
+
+                let html = `<div class="w-full"><h2 class="text-xl font-bold text-green-700 mb-2">🟢 CÔNG ĐOẠN 3: TEST CHỐT HẠ</h2><div class="space-y-8">`;
+                for(let i=0; i<this.phase3Quiz.length; i++) {
+                    const q = this.phase3Quiz[i];
+                    const contentHtml = await this.renderContent(q.content);
+                    html += `<div class="bg-white/50 p-5 rounded-xl border border-slate-100 relative"><div class="font-bold text-slate-700 mb-3">Câu ${i+1}:</div><div class="mb-4 text-slate-800">${contentHtml}</div>`;
+                    if(q.type === 'mcq') html += `<div class="grid grid-cols-2 gap-3">` + q.options.map((o, idx) => `<label class="flex items-center p-3 border rounded bg-white cursor-pointer"><input type="radio" name="p3_q${i}" value="${idx}" class="mr-3" onchange="app.answersPhase3['${q.id}']='${idx}'"> ${o}</label>`).join('') + `</div>`;
+                    else if(q.type === 'tf') html += `<div class="space-y-2">` + q.options.map((o, idx) => `<div class="flex items-center justify-between p-3 border rounded bg-white"><span class="text-sm flex-1 mr-4">${o}</span><div class="flex gap-4"><label><input type="radio" name="p3_q${i}_${idx}" value="0" onchange="app.setTFAnswerP3('${q.id}', ${idx}, '0')"> Đ</label><label><input type="radio" name="p3_q${i}_${idx}" value="1" onchange="app.setTFAnswerP3('${q.id}', ${idx}, '1')"> S</label></div></div>`).join('') + `</div>`;
+                    else html += `<input type="text" class="w-full border p-2 rounded" placeholder="Nhập đáp án..." onchange="app.answersPhase3['${q.id}'] = this.value">`;
+                    html += `</div>`;
+                }
+                html += `</div><div class="text-center mt-10 mb-6"><button onclick="app.submitPhase3()" class="bg-slate-800 text-white px-10 py-3 rounded-full hover:bg-black font-bold shadow-xl animate-bounce">Nộp bài & Tính điểm</button></div></div>`;
+                main.innerHTML = html; MathJax.typeset();
+            },
+            setTFAnswerP3(qId, optIdx, val) { if(!this.answersPhase3[qId]) this.answersPhase3[qId] = {}; this.answersPhase3[qId][optIdx] = val; },
+            submitPhase3() {
+                let score = 0; let detailHtml = '';
+                this.phase3Quiz.forEach((q, idx) => {
+                    let isCorrect = false;
+                    if(q.type === 'mcq') { if(this.answersPhase3[q.id] == q.correct) isCorrect = true; }
+                    else if(q.type === 'tf') { const u = this.answersPhase3[q.id]||{}; const c = q.correct.split('|'); let all=true; if(Object.keys(u).length===0) all=false; else c.forEach((v,k)=>{if(u[k]!=v)all=false}); isCorrect=all; }
+                    else { const u = (this.answersPhase3[q.id]||"").toString().trim().toUpperCase(); const c = (q.correct||"NO_DATA").toString().trim().toUpperCase(); if(u===c || parseFloat(u.replace(',','.'))===parseFloat(c.replace(',','.'))) isCorrect=true; }
+                    if(isCorrect) score++;
+                    detailHtml += `<div class="p-4 border rounded-lg mb-3 ${isCorrect ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200'}"><div class="font-bold text-slate-700">Câu ${idx+1}: ${isCorrect ? 'ĐÚNG' : 'SAI'}</div>${!isCorrect ? `<div class="text-sm text-slate-600 mt-1">Đáp án: ${q.solution}</div>` : ''}</div>`;
+                });
+                
+                if (score === this.phase3Quiz.length) {
+                    confetti({ particleCount: 200, spread: 100, origin: { y: 0.6 } });
+                }
+
+                document.getElementById('student-main').innerHTML = `<div class="text-center py-8 animate-fade-in w-full"><div class="text-5xl font-black text-slate-800 mb-4">${score}/${this.phase3Quiz.length}</div><div class="text-left max-w-3xl mx-auto space-y-4">${detailHtml}</div><div class="mt-10 pt-6 border-t"><button onclick="app.finishSession(${score===this.phase3Quiz.length})" class="bg-indigo-600 text-white px-8 py-3 rounded-full hover:bg-indigo-700 font-bold">Hoàn thành buổi học</button></div></div>`;
+                if(window.MathJax) MathJax.typeset();
+            },
+            finishSession(isPerfect) {
+                if(isPerfect) confetti({ particleCount: 300, spread: 150 });
+                document.getElementById('student-main').innerHTML = `<div class="flex flex-col items-center justify-center h-full min-h-[500px] text-center fade-in"><div class="mb-6 text-6xl animate-bounce">🏆</div><h2 class="text-4xl font-bold text-slate-800 mb-4">CHÚC MỪNG!</h2><p class="text-xl text-slate-600 mb-8">Bạn đã hoàn thành xuất sắc buổi học!</p><button onclick="app.renderStudent()" class="bg-indigo-600 text-white px-8 py-3 rounded-full font-bold shadow-lg hover:bg-indigo-700">Về Danh sách bài học</button></div>`;
             },
 
             // --- VIEW QUESTION DETAIL (ADMIN) ---
@@ -661,6 +876,9 @@
                         </button>
                         <button onclick="app.saveFullHTML()" class="text-xs bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-4 py-1 rounded shadow-lg hover:from-blue-700 hover:to-indigo-700 font-bold flex items-center animate-pulse">
                             <i class="fa-solid fa-file-export mr-2"></i> 🎁 ĐÓNG GÓI & BÀN GIAO (Auto-Sync)
+                        </button>
+                        <button onclick="app.exportJSON()" class="text-xs bg-orange-100 text-orange-700 px-3 py-1 rounded hover:bg-orange-200 font-bold flex items-center" title="Tải dữ liệu JSON">
+                            <i class="fa-solid fa-file-code mr-1"></i> Xuất JSON
                         </button>
                         <button onclick="app.saveToCode()" class="text-xs bg-gray-800 text-white px-3 py-1 rounded shadow hover:bg-gray-900 font-bold flex items-center">
                             <i class="fa-solid fa-code mr-2"></i> Xuất Web
@@ -1026,43 +1244,6 @@
             deleteChapter(g, c) { if(confirm(`Xóa ${c}?`)) { delete this.tree[g][c]; this.saveTree(); } },
             deleteLesson(g, c, l) { if(confirm(`Xóa ${l}?`)) { this.tree[g][c] = this.tree[g][c].filter(item => item !== l); this.saveTree(); } },
 
-            // --- VIEW QUESTION DETAIL (ADMIN) ---
-            viewQuestionDetail(id) {
-                const q = this.data.find(item => item.id == id); if (!q) return;
-                this.renderContent(q.content).then(h => {
-                    let html = `<div class="p-6 h-[80vh] overflow-y-auto">
-                        <div class="flex justify-between items-start mb-4 border-b pb-2">
-                            <div><span class="bg-blue-600 text-white text-xs font-bold px-2 py-1 rounded">#${q.id}</span> <span class="bg-gray-200 px-2 py-1 rounded text-xs ml-2">${q.type.toUpperCase()}</span></div>
-                        </div>
-                        <div class="space-y-4">
-                            <div class="p-4 bg-slate-50 rounded border border-slate-200">
-                                <h4 class="font-bold text-slate-700 mb-2">ĐỀ BÀI:</h4>
-                                <div class="text-lg text-slate-800">${h}</div>
-                                ${q.type==='mcq'?`<div class="mt-2 grid grid-cols-2 gap-2 text-sm">${q.options.map((o,i)=>`<div>${String.fromCharCode(65+i)}. ${o}</div>`).join('')}</div>`:''}
-                                ${q.type==='tf'?`<div class="mt-2 grid grid-cols-1 gap-2 text-sm">${q.options.map((o,i)=>`<div>Ý ${i+1}: ${o}</div>`).join('')}</div>`:''}
-                            </div>
-                            <div class="p-4 bg-green-50 rounded border border-green-100">
-                                <h4 class="font-bold text-green-700 mb-1">ĐÁP ÁN ĐÚNG:</h4>
-                                <div class="font-mono text-xl font-bold">${q.correct}</div>
-                            </div>
-                            <div class="p-4 bg-blue-50 rounded border border-blue-100">
-                                <h4 class="font-bold text-blue-700 mb-1">CƠ SỞ LÝ THUYẾT:</h4>
-                                <div class="text-sm whitespace-pre-wrap">${q.theory}</div>
-                            </div>
-                            <div class="p-4 bg-yellow-50 rounded border border-yellow-100">
-                                <h4 class="font-bold text-yellow-700 mb-1">HƯỚNG DẪN GIẢI (CÁC BƯỚC):</h4>
-                                <ul class="list-disc pl-5 text-sm">${(q.steps||[]).map(s=>`<li>${s}</li>`).join('')}</ul>
-                            </div>
-                            <div class="p-4 bg-indigo-50 rounded border border-indigo-100">
-                                <h4 class="font-bold text-indigo-700 mb-1">LỜI GIẢI CHI TIẾT:</h4>
-                                <div class="text-sm whitespace-pre-wrap">${q.solution}</div>
-                            </div>
-                        </div>
-                    </div>`;
-                    const m = document.getElementById('previewModal'); const c = document.getElementById('previewContent'); c.innerHTML = html; m.style.display = 'block'; MathJax.typesetPromise([c]);
-                });
-            },
-
             // --- EXPORT UTILS ---
             saveFullHTML() {
                 const now = new Date();
@@ -1073,27 +1254,24 @@
                 let html = document.documentElement.outerHTML;
                 const newVersion = Date.now();
                 
-                // Lọc Users: Loại bỏ Admin khi đóng gói bản release
                 const exportUsers = this.users.filter(u => u.role !== 'admin');
                 
-                // Inject Data
                 html = html.replace(/const DATA_VERSION = \d+;/, `const DATA_VERSION = ${newVersion};`);
                 html = html.replace(/const INITIAL_DATA = \[.*?\];/s, `const INITIAL_DATA = ${JSON.stringify(this.data)};`);
                 html = html.replace(/const INITIAL_TREE = \{.*?\};/s, `const INITIAL_TREE = ${JSON.stringify(this.tree)};`);
                 html = html.replace(/const INITIAL_USERS = \[.*?\];/s, `const INITIAL_USERS = ${JSON.stringify(exportUsers)};`);
 
-                // XÓA DẤU VẾT ADMIN TRONG GOLANDING (BẢO MẬT TUYỆT ĐỐI)
                 const cleanGoLanding = `goLanding() { 
                 this.currentUser = null;
                 document.getElementById('app-container').innerHTML = \`
-                    <div class="max-w-5xl mx-auto py-12 fade-in">
+                    <div id="login-screen" class="max-w-5xl mx-auto py-12 fade-in">
                         <div class="text-center mb-10"><h2 class="text-4xl font-bold text-slate-800 mb-2 tracking-tight">Chào mừng đến với G-RESCUE</h2><p class="text-slate-500">Hệ thống gia sư AI thông minh & Quản lý ngân hàng đề</p></div>
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-10 max-w-3xl mx-auto">
                             <!-- Học Sinh -->
-                            <div onclick="app.login('student')" class="role-card bg-white p-8 rounded-2xl shadow-lg border border-blue-50 cursor-pointer text-center group"><div class="w-20 h-20 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:bg-blue-600 transition"><i class="fa-solid fa-user-graduate text-3xl text-blue-600 group-hover:text-white"></i></div><h3 class="text-xl font-bold text-slate-800">Học sinh</h3><p class="text-sm text-slate-500 mt-2">Luyện đề, tra cứu, học sâu với AI Mentor.</p></div>
+                            <div id="role-student" onclick="app.login('student')" class="role-card bg-white p-8 rounded-2xl shadow-lg border border-blue-50 cursor-pointer text-center group"><div class="w-20 h-20 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:bg-blue-600 transition"><i class="fa-solid fa-user-graduate text-3xl text-blue-600 group-hover:text-white"></i></div><h3 class="text-xl font-bold text-slate-800">Học sinh</h3><p class="text-sm text-slate-500 mt-2">Luyện đề, tra cứu, học sâu với AI Mentor.</p></div>
                             
                             <!-- Giáo Viên -->
-                            <div onclick="app.login('teacher')" class="role-card bg-white p-8 rounded-2xl shadow-lg border border-amber-50 cursor-pointer text-center group"><div class="w-20 h-20 bg-amber-100 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:bg-amber-600 transition"><i class="fa-solid fa-chalkboard-user text-3xl text-amber-600 group-hover:text-white"></i></div><h3 class="text-xl font-bold text-slate-800">Giáo viên</h3><p class="text-sm text-slate-500 mt-2">Quản lý lớp học & Ngân hàng đề.</p></div>
+                            <div id="role-teacher" onclick="app.login('teacher')" class="role-card bg-white p-8 rounded-2xl shadow-lg border border-amber-50 cursor-pointer text-center group"><div class="w-20 h-20 bg-amber-100 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:bg-amber-600 transition"><i class="fa-solid fa-chalkboard-user text-3xl text-amber-600 group-hover:text-white"></i></div><h3 class="text-xl font-bold text-slate-800">Giáo viên</h3><p class="text-sm text-slate-500 mt-2">Quản lý lớp học & Ngân hàng đề.</p></div>
                         </div>
                     </div>\`;
             },`;
@@ -1122,7 +1300,7 @@
                 MathJax.typesetPromise([printArea]).then(() => { window.print(); printArea.innerHTML = ''; });
             },
             clearAllData() { if(confirm("XÓA TOÀN BỘ DỮ LIỆU?")) { this.data=[]; localStorage.setItem('g_rescue_v6',JSON.stringify(this.data)); this.renderAdmin(); } },
-            exportJSON() { const blob = new Blob([JSON.stringify(this.data,null,2)], {type: "application/json"}); const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `Data_${Date.now()}.json`; a.click(); },
+            exportJSON() { const fileName = `G-RESCUE-JSON-${this.data.length}.json`; const blob = new Blob([JSON.stringify(this.data,null,2)], {type: "application/json"}); const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = fileName; document.body.appendChild(a); a.click(); document.body.removeChild(a); },
             importJSONFile() { 
                 if (!this.sel.g || !this.sel.c || !this.sel.l) return alert("⚠️ Vui lòng chọn Khối, Chương và Bài học trước!");
                 const f = document.getElementById('json-input').files[0]; 
@@ -1212,14 +1390,14 @@
             goLanding() { 
                 this.currentUser = null;
                 document.getElementById('app-container').innerHTML = `
-                    <div class="max-w-5xl mx-auto py-12 fade-in">
+                    <div id="login-screen" class="max-w-5xl mx-auto py-12 fade-in">
                         <div class="text-center mb-10"><h2 class="text-4xl font-bold text-slate-800 mb-2 tracking-tight">Chào mừng đến với G-RESCUE</h2><p class="text-slate-500">Hệ thống gia sư AI thông minh & Quản lý ngân hàng đề</p></div>
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
                             <!-- Học Sinh -->
-                            <div onclick="app.login('student')" class="role-card bg-white p-8 rounded-2xl shadow-lg border border-blue-50 cursor-pointer text-center group"><div class="w-20 h-20 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:bg-blue-600 transition"><i class="fa-solid fa-user-graduate text-3xl text-blue-600 group-hover:text-white"></i></div><h3 class="text-xl font-bold text-slate-800">Học sinh</h3><p class="text-sm text-slate-500 mt-2">Luyện đề, tra cứu, học sâu với AI Mentor.</p></div>
+                            <div id="role-student" onclick="app.login('student')" class="role-card bg-white p-8 rounded-2xl shadow-lg border border-blue-50 cursor-pointer text-center group"><div class="w-20 h-20 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:bg-blue-600 transition"><i class="fa-solid fa-user-graduate text-3xl text-blue-600 group-hover:text-white"></i></div><h3 class="text-xl font-bold text-slate-800">Học sinh</h3><p class="text-sm text-slate-500 mt-2">Luyện đề, tra cứu, học sâu với AI Mentor.</p></div>
                             
-                            <!-- Giáo Viên (Mới) -->
-                            <div onclick="app.login('teacher')" class="role-card bg-white p-8 rounded-2xl shadow-lg border border-amber-50 cursor-pointer text-center group"><div class="w-20 h-20 bg-amber-100 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:bg-amber-600 transition"><i class="fa-solid fa-chalkboard-user text-3xl text-amber-600 group-hover:text-white"></i></div><h3 class="text-xl font-bold text-slate-800">Giáo viên</h3><p class="text-sm text-slate-500 mt-2">Quản lý Ngân hàng câu hỏi & Cấu trúc.</p></div>
+                            <!-- Giáo Viên -->
+                            <div id="role-teacher" onclick="app.login('teacher')" class="role-card bg-white p-8 rounded-2xl shadow-lg border border-amber-50 cursor-pointer text-center group"><div class="w-20 h-20 bg-amber-100 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:bg-amber-600 transition"><i class="fa-solid fa-chalkboard-user text-3xl text-amber-600 group-hover:text-white"></i></div><h3 class="text-xl font-bold text-slate-800">Giáo viên</h3><p class="text-sm text-slate-500 mt-2">Quản lý Ngân hàng câu hỏi & Cấu trúc.</p></div>
 
                             <!-- Admin (Tách riêng) -->
                             <div onclick="app.login('admin')" class="role-card bg-white p-8 rounded-2xl shadow-lg border border-red-50 cursor-pointer text-center group"><div class="w-20 h-20 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:bg-red-600 transition"><i class="fa-solid fa-user-shield text-3xl text-red-600 group-hover:text-white"></i></div><h3 class="text-xl font-bold text-slate-800">Quản trị viên</h3><p class="text-sm text-slate-500 mt-2">Quản lý toàn hệ thống, Users & Tín dụng.</p></div>
